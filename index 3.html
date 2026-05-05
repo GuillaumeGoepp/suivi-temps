@@ -1,0 +1,577 @@
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#1a2e1a">
+<title>Suivi du temps</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=DM+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --vert: #2d5a2d;
+  --vert-clair: #4a8c4a;
+  --vert-pale: #e8f2e8;
+  --fond: #f5f2ed;
+  --blanc: #ffffff;
+  --texte: #1a2e1a;
+  --texte2: #5a6e5a;
+  --texte3: #8a9e8a;
+  --vide: #c8d8c8;
+  --rouge: #c0392b;
+  --radius: 16px;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+html, body { font-family: 'DM Sans', sans-serif; background: var(--fond); color: var(--texte); min-height: 100vh; width: 100%; }
+
+.header { background: var(--vert); color: white; padding: 48px 24px 20px; position: relative; overflow: hidden; }
+.header::before { content: ''; position: absolute; top: -40px; right: -40px; width: 180px; height: 180px; border-radius: 50%; background: rgba(255,255,255,.05); }
+.header-company { font-size: 11px; letter-spacing: .1em; text-transform: uppercase; opacity: .6; margin-bottom: 4px; }
+.header-name { font-size: 28px; font-weight: 600; line-height: 1.1; }
+.header-date { font-size: 14px; opacity: .7; margin-top: 6px; }
+.header-badge { display: inline-flex; align-items: center; gap: 5px; background: rgba(255,255,255,.12); border-radius: 20px; padding: 4px 10px; font-size: 12px; margin-top: 10px; }
+.header-badge::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: #7ed87e; }
+
+.main { padding: 16px 16px 100px; }
+
+.block { background: var(--blanc); border-radius: var(--radius); padding: 16px; margin-bottom: 10px; }
+.block-label { font-size: 10px; text-transform: uppercase; letter-spacing: .08em; color: var(--texte3); margin-bottom: 12px; }
+
+.time-big { display: flex; align-items: center; justify-content: center; gap: 16px; padding: 6px 0; }
+.time-val { font-family: 'DM Mono', monospace; font-size: 36px; font-weight: 500; color: var(--texte); line-height: 1; }
+.time-val.empty { color: var(--vide); }
+.time-sep { font-size: 20px; color: var(--texte3); }
+.time-sep.empty { color: var(--vide); }
+
+.total-block { display: flex; align-items: baseline; justify-content: space-between; padding: 14px 18px; background: var(--blanc); border-radius: var(--radius); margin-bottom: 10px; }
+.total-lbl { font-size: 14px; color: var(--texte2); }
+.total-num { font-family: 'DM Mono', monospace; font-size: 40px; font-weight: 500; color: var(--vert); line-height: 1; }
+.total-num.empty { color: var(--vide); }
+.total-unit { font-size: 16px; color: var(--texte3); margin-left: 3px; }
+
+.type-pill { display: inline-flex; align-items: center; gap: 5px; border-radius: 20px; padding: 5px 12px; font-size: 13px; font-weight: 500; margin-bottom: 14px; }
+.pill-travaillee { background: var(--vert-pale); color: var(--vert); }
+.pill-vide { background: #edeae4; color: var(--texte3); }
+.pill-cp { background: #e8f0ff; color: #3358c4; }
+.pill-at { background: #fff0e8; color: #8b5e3c; }
+
+.btn { width: 100%; padding: 17px; border-radius: var(--radius); border: none; font-family: 'DM Sans', sans-serif; font-size: 17px; font-weight: 600; cursor: pointer; transition: transform .1s, opacity .1s; }
+.btn:active { transform: scale(.98); opacity: .9; }
+.btn-primary { background: var(--vert); color: white; }
+.btn-secondary { background: transparent; color: var(--vert); border: 1.5px solid var(--vert); margin-top: 8px; }
+.modif-count { text-align: center; font-size: 12px; color: var(--texte3); margin-top: 8px; }
+
+.alert { border-radius: 12px; padding: 12px 16px; font-size: 14px; margin-bottom: 12px; }
+.alert-warn { background: #fff3cd; color: #856404; }
+.alert-max { background: #fff0e8; color: #8b5e3c; }
+
+.type-selector { display: flex; gap: 8px; }
+.type-btn { flex: 1; padding: 13px 8px; border-radius: 12px; border: 1.5px solid #edeae4; background: var(--blanc); font-family: 'DM Sans', sans-serif; font-size: 15px; font-weight: 500; color: var(--texte2); cursor: pointer; text-align: center; transition: all .15s; }
+.type-btn.sel-travaillee { background: var(--vert-pale); border-color: var(--vert); color: var(--vert); }
+.type-btn.sel-cp { background: #e8f0ff; border-color: #3358c4; color: #3358c4; }
+.type-btn.sel-at { background: #fff0e8; border-color: #8b5e3c; color: #8b5e3c; }
+
+.time-row { display: flex; align-items: center; gap: 10px; margin-top: 6px; }
+.time-btn { flex: 1; background: var(--fond); border: none; border-radius: 12px; padding: 15px 8px; font-family: 'DM Mono', monospace; font-size: 24px; font-weight: 500; color: var(--texte); text-align: center; cursor: pointer; transition: background .15s; }
+.time-btn.empty-val { color: var(--vide); }
+.time-btn:active { background: #edeae4; }
+.time-sep2 { font-size: 18px; color: var(--texte3); }
+
+.add-btn { display: flex; align-items: center; justify-content: center; gap: 6px; border: 1.5px dashed var(--texte3); border-radius: 12px; padding: 12px; font-family: 'DM Sans', sans-serif; font-size: 14px; color: var(--texte3); width: 100%; background: none; cursor: pointer; margin-top: 10px; }
+
+.textarea { width: 100%; padding: 14px; border: 1.5px solid #edeae4; border-radius: 12px; font-family: 'DM Sans', sans-serif; font-size: 15px; color: var(--texte); background: var(--blanc); outline: none; resize: none; line-height: 1.5; }
+.textarea:focus { border-color: var(--vert-clair); }
+
+.error-box { background: #fff0f0; border: 1px solid #fcc; border-radius: 12px; padding: 14px; font-size: 14px; color: var(--rouge); text-align: center; margin-bottom: 12px; }
+
+.jour-item { display: flex; align-items: center; gap: 12px; padding: 14px 0; border-bottom: 1px solid var(--fond); cursor: pointer; }
+.jour-item:last-child { border-bottom: none; }
+.jour-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+.dot-ok { background: var(--vert-clair); }
+.dot-vide { background: #edeae4; border: 1.5px solid var(--texte3); }
+.dot-special { background: #3358c4; }
+.jour-info { flex: 1; }
+.jour-nom { font-size: 16px; font-weight: 500; }
+.jour-date { font-size: 15px; color: var(--texte3); margin-top: 2px; }
+.jour-h { font-family: 'DM Mono', monospace; font-size: 15px; font-weight: 500; color: var(--texte2); }
+.jour-h.vide { color: var(--texte3); font-family: 'DM Sans', sans-serif; font-size: 13px; }
+
+.loader { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 60px 20px; gap: 16px; color: var(--texte3); font-size: 14px; }
+.spinner { width: 32px; height: 32px; border: 2px solid #edeae4; border-top-color: var(--vert); border-radius: 50%; animation: spin .8s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.nav { position: fixed; bottom: 0; left: 0; right: 0; background: var(--blanc); border-top: 1px solid rgba(0,0,0,.08); display: flex; padding: 8px 0 env(safe-area-inset-bottom, 16px); z-index: 100; }
+.nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 6px 0; cursor: pointer; color: var(--texte3); font-size: 11px; font-weight: 500; border: none; background: none; font-family: 'DM Sans', sans-serif; }
+.nav-item.active { color: var(--vert); }
+.nav-icon { font-size: 20px; line-height: 1; }
+
+.vue { display: none; }
+.vue.active { display: block; }
+
+/* Picker */
+#picker-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 999; }
+#picker-overlay.open { display: block; }
+#picker-popup { display: none; position: fixed; bottom: 0; left: 0; right: 0; background: var(--blanc); border-radius: 24px 24px 0 0; z-index: 1000; padding-bottom: env(safe-area-inset-bottom, 20px); }
+#picker-popup.open { display: block; }
+.picker-head { display: flex; justify-content: space-between; align-items: center; padding: 16px 24px 12px; }
+.picker-cancel { background: none; border: none; font-size: 17px; color: var(--texte3); font-family: 'DM Sans', sans-serif; cursor: pointer; padding: 4px 8px; }
+.picker-preview { font-family: 'DM Mono', monospace; font-size: 28px; font-weight: 500; color: var(--texte); }
+.picker-ok { background: none; border: none; font-size: 17px; color: var(--vert); font-weight: 600; font-family: 'DM Sans', sans-serif; cursor: pointer; padding: 4px 8px; }
+.picker-drums { display: flex; justify-content: center; align-items: center; height: 220px; position: relative; }
+.picker-drums::before { content: ''; position: absolute; top: 50%; transform: translateY(-50%); width: 160px; height: 52px; border-top: 2px solid var(--vert); border-bottom: 2px solid var(--vert); border-radius: 4px; z-index: 2; pointer-events: none; }
+.picker-drums::after { content: ':'; position: absolute; font-family: 'DM Mono', monospace; font-size: 28px; font-weight: 500; color: var(--texte); z-index: 3; pointer-events: none; }
+.drum { flex: 1; overflow-y: scroll; height: 100%; scroll-snap-type: y mandatory; -webkit-overflow-scrolling: touch; scrollbar-width: none; mask-image: linear-gradient(to bottom, transparent, black 30%, black 70%, transparent); -webkit-mask-image: linear-gradient(to bottom, transparent, black 30%, black 70%, transparent); }
+.drum::-webkit-scrollbar { display: none; }
+.drum-item { height: 52px; display: flex; align-items: center; justify-content: center; font-family: 'DM Mono', monospace; font-size: 28px; font-weight: 500; scroll-snap-align: center; color: var(--texte); }
+.drum-spacer { height: 84px; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-company">Chants de la Terre</div>
+  <div class="header-name" id="hdr-name">…</div>
+  <div class="header-date" id="hdr-date">…</div>
+  <div class="header-badge" id="hdr-periode">…</div>
+</div>
+
+<div class="main">
+
+  <div class="vue active" id="vue-journee">
+    <div id="journee-content">
+      <div class="loader"><div class="spinner"></div>Chargement…</div>
+    </div>
+  </div>
+
+  <div class="vue" id="vue-formulaire">
+    <div class="block">
+      <div class="block-label">Type de journée</div>
+      <div class="type-selector">
+        <button class="type-btn sel-travaillee" data-type="travaillée" onclick="selectType(this)">Travail</button>
+        <button class="type-btn" data-type="CP" onclick="selectType(this)">CP</button>
+        <button class="type-btn" data-type="AT" onclick="selectType(this)">AT</button>
+      </div>
+    </div>
+    <div id="card-horaires" class="block">
+      <div class="block-label">Matin</div>
+      <div class="time-row">
+        <button class="time-btn empty-val" id="c1-debut" onclick="openPicker('c1-debut')">--:--</button>
+        <span class="time-sep2">→</span>
+        <button class="time-btn empty-val" id="c1-fin" onclick="openPicker('c1-fin')">--:--</button>
+      </div>
+      <div class="block-label" style="margin-top:14px">Après-midi</div>
+      <div class="time-row">
+        <button class="time-btn empty-val" id="c2-debut" onclick="openPicker('c2-debut')">--:--</button>
+        <span class="time-sep2">→</span>
+        <button class="time-btn empty-val" id="c2-fin" onclick="openPicker('c2-fin')">--:--</button>
+      </div>
+      <div id="c3-section" style="display:none">
+        <div class="block-label" style="margin-top:14px">3e créneau</div>
+        <div class="time-row">
+          <button class="time-btn empty-val" id="c3-debut" onclick="openPicker('c3-debut')">--:--</button>
+          <span class="time-sep2">→</span>
+          <button class="time-btn empty-val" id="c3-fin" onclick="openPicker('c3-fin')">--:--</button>
+        </div>
+      </div>
+    </div>
+    <div id="save-error" style="display:none" class="error-box"></div>
+    <button class="btn btn-primary" id="btn-save" onclick="sauvegarder()">Enregistrer</button>
+    <button class="btn btn-secondary" onclick="showVue('journee')" style="margin-bottom:10px">Annuler</button>
+    <button class="add-btn" id="btn-add-c3" onclick="toggleC3()">+ Ajouter un créneau</button>
+    <div class="block" style="margin-top:10px">
+      <div class="block-label">Commentaire (optionnel)</div>
+      <textarea class="textarea" id="commentaire" rows="2" placeholder="Remarque éventuelle…"></textarea>
+    </div>
+  </div>
+
+  <div class="vue" id="vue-mesjours">
+    <div id="mesjours-content">
+      <div class="loader"><div class="spinner"></div>Chargement…</div>
+    </div>
+  </div>
+
+</div>
+
+<nav class="nav">
+  <button class="nav-item active" id="nav-journee" onclick="showVue('journee')">
+    <span class="nav-icon">☀️</span>Ma journée
+  </button>
+  <button class="nav-item" id="nav-mesjours" onclick="showVue('mesjours')">
+    <span class="nav-icon">📅</span>Mes jours
+  </button>
+</nav>
+
+<div id="picker-overlay" onclick="cancelPicker()"></div>
+<div id="picker-popup">
+  <div class="picker-head">
+    <button class="picker-cancel" onclick="cancelPicker()">Annuler</button>
+    <span class="picker-preview" id="picker-preview">08:00</span>
+    <button class="picker-ok" onclick="confirmPicker()">OK</button>
+  </div>
+  <div class="picker-drums">
+    <div class="drum" id="drum-h" onscroll="updatePreview()"></div>
+    <div class="drum" id="drum-m" onscroll="updatePreview()"></div>
+  </div>
+</div>
+
+<script>
+const COLLAB_ID = new URLSearchParams(location.search).get('id') || 'COLL001';
+const NOMS = { COLL001:'Guillaume', COLL002:'Véro', COLL003:'Marion', COLL004:'JJ', COLL005:'Noémie' };
+const JOURS = ['Dimanche','Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi'];
+const MOIS  = ['janvier','février','mars','avril','mai','juin','juillet','août','septembre','octobre','novembre','décembre'];
+const HOURS = Array.from({length:24},(_,i)=>String(i).padStart(2,'0'));
+const MINS  = ['00','15','30','45'];
+
+let jourData = null;
+let typeJour = 'travaillée';
+let pickerTarget = null;
+
+function initHeader() {
+  const now = new Date();
+  document.getElementById('hdr-name').textContent = NOMS[COLLAB_ID] || COLLAB_ID;
+  document.getElementById('hdr-date').textContent = JOURS[now.getDay()] + ' ' + now.getDate() + ' ' + MOIS[now.getMonth()] + ' ' + now.getFullYear();
+}
+
+async function loadJourDuJour() {
+  try {
+    const d = await jsonpFetch(API_URL + '?action=getJourDuJour&collabId=' + COLLAB_ID);
+    if (!d.ok) { document.getElementById('journee-content').innerHTML = '<div class="error-box">' + d.error + '</div>'; return; }
+    jourData = d.jour;
+    document.getElementById('hdr-periode').textContent = d.periode || 'Période en cours';
+    renderJournee();
+  } catch(e) {
+    document.getElementById('journee-content').innerHTML = '<div class="error-box">Impossible de charger la journée.<br>' + e.message + '</div>';
+  }
+}
+
+function renderJournee() {
+  if (!jourData) return;
+  const j = jourData;
+  const saisi = j.c1Debut !== '' || j.typeJour === 'CP' || j.typeJour === 'AT';
+  const maxModifs = j.nbModifications >= 3;
+  const verrouille = j.verrouillee || maxModifs;
+  let html = '';
+
+  if (j.verrouillee) html += '<div class="alert alert-warn">🔒 Période clôturée — saisie verrouillée</div>';
+  else if (maxModifs) html += '<div class="alert alert-max">✋ 3 modifications effectuées — c\'est le maximum.</div>';
+
+  const typeMap = { travaillée:'pill-travaillee', CP:'pill-cp', AT:'pill-at' };
+  const typeLbl = { travaillée:'✦ Travaillée', CP:'✈ Congé payé', AT:'⚕ Arrêt travail' };
+  const t = j.typeJour || 'travaillée';
+
+  if (saisi) {
+    html += '<div class="type-pill ' + (typeMap[t]||'pill-travaillee') + '">' + (typeLbl[t]||t) + '</div>';
+  } else {
+    html += '<div class="type-pill pill-vide">— Journée non saisie</div>';
+  }
+
+  if (!saisi) {
+    // Journée vide — afficher créneaux vides
+    html += '<div class="block"><div class="block-label">Matin</div><div class="time-big">';
+    html += '<span class="time-val empty">--:--</span><span class="time-sep empty">→</span><span class="time-val empty">--:--</span>';
+    html += '</div></div>';
+    html += '<div class="block"><div class="block-label">Après-midi</div><div class="time-big">';
+    html += '<span class="time-val empty">--:--</span><span class="time-sep empty">→</span><span class="time-val empty">--:--</span>';
+    html += '</div></div>';
+  } else if (t === 'travaillée') {
+    // Journée travaillée — afficher les heures
+    html += '<div class="block"><div class="block-label">Matin</div><div class="time-big">';
+    html += '<span class="time-val' + (j.c1Debut ? '' : ' empty') + '">' + (j.c1Debut || '--:--') + '</span>';
+    html += '<span class="time-sep">→</span>';
+    html += '<span class="time-val' + (j.c1Fin ? '' : ' empty') + '">' + (j.c1Fin || '--:--') + '</span>';
+    html += '</div></div>';
+    html += '<div class="block"><div class="block-label">Après-midi</div><div class="time-big">';
+    html += '<span class="time-val' + (j.c2Debut ? '' : ' empty') + '">' + (j.c2Debut || '--:--') + '</span>';
+    html += '<span class="time-sep">→</span>';
+    html += '<span class="time-val' + (j.c2Fin ? '' : ' empty') + '">' + (j.c2Fin || '--:--') + '</span>';
+    html += '</div></div>';
+    if (j.c3Debut) {
+      html += '<div class="block"><div class="block-label">3e créneau</div><div class="time-big">';
+      html += '<span class="time-val">' + j.c3Debut + '</span><span class="time-sep">→</span><span class="time-val">' + j.c3Fin + '</span>';
+      html += '</div></div>';
+    }
+  } else {
+    // CP ou AT — juste un message clair
+    html += '<div class="block" style="text-align:center;padding:24px 16px;">';
+    html += '<div style="font-size:48px;margin-bottom:12px;">' + (t === 'CP' ? '✈️' : '⚕️') + '</div>';
+    html += '<div style="font-size:16px;color:var(--texte2);font-weight:500;">' + (t === 'CP' ? 'Congé payé' : 'Arrêt de travail') + '</div>';
+    html += '<div style="font-size:13px;color:var(--texte3);margin-top:6px;">Journée saisie</div>';
+    html += '</div>';
+  }
+
+  html += '<div class="total-block"><span class="total-lbl">Total</span><span>';
+  if (saisi && j.totalHeures > 0) html += '<span class="total-num">' + Number(j.totalHeures).toFixed(2) + '</span><span class="total-unit">h</span>';
+  else html += '<span class="total-num empty">--</span><span class="total-unit">h</span>';
+  html += '</span></div>';
+
+  if (!verrouille) {
+    html += '<button class="btn btn-primary" onclick="ouvrirFormulaire()">' + (saisi ? 'Modifier' : 'Saisir mes heures') + '</button>';
+    if (j.nbModifications > 0) html += '<div class="modif-count">' + j.nbModifications + '/3 modification' + (j.nbModifications > 1 ? 's' : '') + '</div>';
+  }
+
+  document.getElementById('journee-content').innerHTML = html;
+}
+
+function ouvrirFormulaire() {
+  if (!jourData) return;
+
+  // Réinitialiser le bouton Enregistrer
+  const btnSave = document.getElementById('btn-save');
+  if (btnSave) { btnSave.disabled = false; btnSave.textContent = 'Enregistrer'; btnSave.style.opacity = '1'; }
+
+  // Mettre à jour le header avec la date du jour chargé
+  const dh = new Date(jourData.date + 'T12:00:00');
+  document.getElementById('hdr-date').textContent = JOURS[dh.getDay()] + ' ' + dh.getDate() + ' ' + MOIS[dh.getMonth()] + ' ' + dh.getFullYear();
+
+  typeJour = jourData.typeJour || 'travaillée';
+  setTimeBtn('c1-debut', jourData.c1Debut);
+  setTimeBtn('c1-fin',   jourData.c1Fin);
+  setTimeBtn('c2-debut', jourData.c2Debut);
+  setTimeBtn('c2-fin',   jourData.c2Fin);
+  setTimeBtn('c3-debut', jourData.c3Debut);
+  setTimeBtn('c3-fin',   jourData.c3Fin);
+  document.getElementById('commentaire').value = jourData.commentaire || '';
+  document.querySelectorAll('.type-btn').forEach(b => { b.className = 'type-btn'; if (b.dataset.type === typeJour) b.classList.add('sel-' + (typeJour==='travaillée'?'travaillee':typeJour.toLowerCase())); });
+  const hasC3 = jourData.c3Debut !== '';
+  document.getElementById('c3-section').style.display = hasC3 ? 'block' : 'none';
+  document.getElementById('btn-add-c3').style.display = hasC3 ? 'none' : 'flex';
+  document.getElementById('card-horaires').style.display = typeJour !== 'travaillée' ? 'none' : 'block';
+  document.getElementById('save-error').style.display = 'none';
+  showVue('formulaire');
+}
+
+function selectType(btn) {
+  typeJour = btn.dataset.type;
+  document.querySelectorAll('.type-btn').forEach(b => b.className = 'type-btn');
+  btn.classList.add('sel-' + (typeJour==='travaillée'?'travaillee':typeJour.toLowerCase()));
+  document.getElementById('card-horaires').style.display = typeJour !== 'travaillée' ? 'none' : 'block';
+}
+
+function toggleC3() {
+  document.getElementById('c3-section').style.display = 'block';
+  document.getElementById('btn-add-c3').style.display = 'none';
+}
+
+function setTimeBtn(id, val) {
+  const btn = document.getElementById(id);
+  if (val && val !== '') {
+    const [h, m] = val.split(':');
+    const closest = [0,15,30,45].reduce((a,b) => Math.abs(b-parseInt(m)) < Math.abs(a-parseInt(m)) ? b : a);
+    btn.textContent = h + ':' + String(closest).padStart(2,'0');
+    btn.classList.remove('empty-val');
+  } else {
+    btn.textContent = '--:--';
+    btn.classList.add('empty-val');
+  }
+}
+
+function getTimeVal(id) {
+  const t = document.getElementById(id).textContent;
+  return t === '--:--' ? '' : t;
+}
+
+async function sauvegarder() {
+  const errBox = document.getElementById('save-error');
+  errBox.style.display = 'none';
+  const btnSave = document.getElementById('btn-save');
+  btnSave.disabled = true;
+  btnSave.textContent = '⏳ Enregistrement…';
+  btnSave.style.opacity = '0.6';
+  const c1d = getTimeVal('c1-debut'), c1f = getTimeVal('c1-fin');
+  const c2d = getTimeVal('c2-debut'), c2f = getTimeVal('c2-fin');
+  if (typeJour === 'travaillée') {
+    if (!c1d && !c2d) { errBox.textContent = 'Saisis au moins un créneau horaire.'; errBox.style.display = 'block'; return; }
+    if (c1d && !c1f)  { errBox.textContent = 'Matin : heure de fin manquante.'; errBox.style.display = 'block'; return; }
+    if (c2d && !c2f)  { errBox.textContent = 'Après-midi : heure de fin manquante.'; errBox.style.display = 'block'; return; }
+  }
+  const payload = { action:'saveHoraires', jourId:jourData.jourId, typeJour, c1Debut:c1d, c1Fin:c1f, c2Debut:c2d, c2Fin:c2f, c3Debut:getTimeVal('c3-debut'), c3Fin:getTimeVal('c3-fin'), commentaire:document.getElementById('commentaire').value };
+  try {
+    const params = Object.entries(payload).map(([k,v]) => k + '=' + encodeURIComponent(v)).join('&');
+    const d = await jsonpFetch(API_URL + '?action=saveHoraires&' + params);
+    if (!d.ok) { errBox.textContent = d.error || 'Erreur.'; errBox.style.display = 'block';
+      btnSave.disabled = false; btnSave.textContent = 'Enregistrer'; btnSave.style.opacity = '1';
+      return; }
+    jourData = { ...jourData, ...payload, nbModifications:d.nbModifications, totalHeures:calculTotal(payload), verrouillee:false };
+    showVue('journee');
+    renderJournee();
+  } catch(e) { errBox.textContent = e.message || 'Erreur.'; errBox.style.display = 'block'; btnSave.disabled = false; btnSave.textContent = 'Enregistrer'; btnSave.style.opacity = '1'; }
+}
+
+function calculTotal(p) {
+  let t = 0;
+  if (p.c1Debut && p.c1Fin) t += diff(p.c1Debut, p.c1Fin);
+  if (p.c2Debut && p.c2Fin) t += diff(p.c2Debut, p.c2Fin);
+  if (p.c3Debut && p.c3Fin) t += diff(p.c3Debut, p.c3Fin);
+  return t;
+}
+function diff(a, b) {
+  const [h1,m1] = a.split(':').map(Number);
+  const [h2,m2] = b.split(':').map(Number);
+  return Math.max(0, (h2*60+m2-h1*60-m1)/60);
+}
+
+async function loadMesJours() {
+  document.getElementById('mesjours-content').innerHTML = '<div class="loader"><div class="spinner"></div>Chargement…</div>';
+  try {
+    const d = await jsonpFetch(API_URL + '?action=getMesJours&collabId=' + COLLAB_ID);
+    if (!d.ok) { document.getElementById('mesjours-content').innerHTML = '<div class="error-box">' + d.error + '</div>'; return; }
+    renderMesJours(d.jours, d.periode);
+  } catch(e) {
+    document.getElementById('mesjours-content').innerHTML = '<div class="error-box">' + e.message + '</div>';
+  }
+}
+
+function renderMesJours(jours, periode) {
+  if (!jours || !jours.length) { document.getElementById('mesjours-content').innerHTML = '<div class="error-box">Aucun jour trouvé.</div>'; return; }
+  
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  
+  const sorted = [...jours].sort((a,b) => b.date.localeCompare(a.date));
+  const passes = sorted.filter(j => {
+    const d = new Date(j.date + 'T12:00:00');
+    const djour = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+    return djour <= today;
+  }).slice(0, 6);
+
+  const typeIcon  = { travaillée:'', CP:'✈️', AT:'⚕️' };
+  const typeLabel = { travaillée:'', CP:'Congé payé', AT:'Arrêt travail' };
+
+  let html = '<div class="block"><div class="block-label">' + (periode||'Période en cours') + '</div>';
+  
+  for (const j of passes) {
+    const d = new Date(j.date + 'T12:00:00');
+    const djour = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+    const isToday = djour.getTime() === today.getTime();
+    const joursDepuis = Math.round((today - djour) / 86400000);
+    const modifiable = joursDepuis <= 5;
+    const t = j.typeJour || 'travaillée';
+    const nonTravaillee = t === 'CP' || t === 'AT';
+
+    let statutHtml = '';
+    if (!j.saisi) {
+      statutHtml = '<span style="font-size:13px;color:#c8833a;font-weight:500;">⚠️ Non saisi</span>';
+    } else if (nonTravaillee) {
+      statutHtml = '<span style="font-size:13px;color:var(--texte2);font-weight:500;">' + typeIcon[t] + ' ' + typeLabel[t] + '</span>';
+    } else {
+      statutHtml = '<span style="font-family:monospace;font-size:16px;font-weight:500;color:var(--texte2);">' + Number(j.totalHeures).toFixed(2) + 'h</span>';
+    }
+
+    html += '<div class="jour-item" onclick="ouvrirJourPasse(\'' + j.jourId + '\', ' + modifiable + ')">';
+    html += '<span class="jour-dot ' + (j.saisi ? (nonTravaillee ? 'dot-special' : 'dot-ok') : 'dot-vide') + '"></span>';
+    html += '<div class="jour-info">';
+    html += '<div class="jour-nom">' + JOURS[d.getDay()] + (isToday ? ' <span style="font-size:11px;background:#e8f2e8;color:var(--vert);border-radius:8px;padding:1px 6px;">Auj.</span>' : '') + (modifiable && !isToday ? ' <span style="font-size:11px;color:var(--texte3);">✏️</span>' : '') + '</div>';
+    html += '<div class="jour-date">' + d.getDate() + ' ' + MOIS[d.getMonth()] + '</div>';
+    html += '</div>';
+    html += '<div style="text-align:right">' + statutHtml + '</div>';
+    html += '</div>';
+  }
+  
+  html += '</div>';
+  document.getElementById('mesjours-content').innerHTML = html;
+}
+
+function ouvrirJour(jourId) {
+  if (jourData && jourId === jourData.jourId && !jourData.verrouillee && jourData.nbModifications < 3) {
+    ouvrirFormulaire();
+  }
+}
+
+async function ouvrirJourPasse(jourId, modifiable) {
+  // Si c'est le jour actuel — aller sur Ma journée directement
+  if (jourData && jourId === jourData.jourId) {
+    showVue('journee');
+    return;
+  }
+
+  // Afficher spinner immédiatement
+  showVue('journee');
+  document.getElementById('journee-content').innerHTML = '<div class="loader"><div class="spinner"></div>Chargement…</div>';
+
+  // Charger ce jour via le proxy
+  try {
+    const d = await jsonpFetch(API_URL + '?action=getJourById&jourId=' + encodeURIComponent(jourId) + '&collabId=' + COLLAB_ID);
+    if (!d.ok) {
+      document.getElementById('journee-content').innerHTML = '<div class="error-box">' + d.error + '</div>';
+      return;
+    }
+    jourData = d.jour;
+    // Si non modifiable, forcer verrouillee
+    if (!modifiable) jourData.verrouillee = true;
+    // Mettre à jour le header avec la date du jour chargé
+    const dh = new Date(jourData.date + 'T12:00:00');
+    document.getElementById('hdr-date').textContent = JOURS[dh.getDay()] + ' ' + dh.getDate() + ' ' + MOIS[dh.getMonth()] + ' ' + dh.getFullYear();
+    renderJournee();
+  } catch(e) {
+    document.getElementById('journee-content').innerHTML = '<div class="error-box">Impossible de charger ce jour.</div>';
+  }
+}
+
+function showVue(nom) {
+  document.querySelectorAll('.vue').forEach(v => v.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('vue-' + nom).classList.add('active');
+  const nav = document.getElementById('nav-' + nom);
+  if (nav) nav.classList.add('active');
+  if (nom === 'mesjours') loadMesJours();
+}
+
+// ── PICKER ──
+function initDrums() {
+  const hEl = document.getElementById('drum-h');
+  const mEl = document.getElementById('drum-m');
+  if (hEl.children.length > 1) return;
+  hEl.innerHTML = '<div class="drum-spacer"></div>';
+  HOURS.forEach(h => { const d = document.createElement('div'); d.className = 'drum-item'; d.textContent = h; hEl.appendChild(d); });
+  hEl.innerHTML += '<div class="drum-spacer"></div>';
+  mEl.innerHTML = '<div class="drum-spacer"></div>';
+  MINS.forEach(m => { const d = document.createElement('div'); d.className = 'drum-item'; d.textContent = m; mEl.appendChild(d); });
+  mEl.innerHTML += '<div class="drum-spacer"></div>';
+}
+
+function openPicker(fieldId) {
+  initDrums();
+  pickerTarget = fieldId;
+  const val = document.getElementById(fieldId).textContent;
+  const h = val !== '--:--' ? val.split(':')[0] : '08';
+  const m = val !== '--:--' ? val.split(':')[1] : '00';
+  const hi = HOURS.indexOf(h);
+  const mi = MINS.indexOf(m) === -1 ? 0 : MINS.indexOf(m);
+  setTimeout(() => {
+    document.getElementById('drum-h').scrollTop = hi * 52;
+    document.getElementById('drum-m').scrollTop = mi * 52;
+    updatePreview();
+  }, 30);
+  document.getElementById('picker-overlay').classList.add('open');
+  document.getElementById('picker-popup').classList.add('open');
+}
+
+function updatePreview() {
+  const hi = Math.round(document.getElementById('drum-h').scrollTop / 52);
+  const mi = Math.round(document.getElementById('drum-m').scrollTop / 52);
+  const h = HOURS[Math.min(hi, 23)] || '08';
+  const m = MINS[Math.min(mi, 3)] || '00';
+  document.getElementById('picker-preview').textContent = h + ':' + m;
+}
+
+function confirmPicker() {
+  const val = document.getElementById('picker-preview').textContent;
+  const btn = document.getElementById(pickerTarget);
+  btn.textContent = val;
+  btn.classList.remove('empty-val');
+  closePicker();
+}
+
+function cancelPicker() { closePicker(); }
+
+function closePicker() {
+  document.getElementById('picker-overlay').classList.remove('open');
+  document.getElementById('picker-popup').classList.remove('open');
+}
+
+initHeader();
+loadJourDuJour();
+</script>
+</body>
+</html>
