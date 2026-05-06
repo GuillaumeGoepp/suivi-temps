@@ -1,73 +1,439 @@
 <!DOCTYPE html>
-<html>
+<html lang="fr">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="theme-color" content="#1a2e1a">
-    <title>Suivi du temps</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=DM+Mono:wght@500&display=swap" rel="stylesheet">
-    <style>
-    :root {
-        --vert: #2d5a2d;
-        --vert-clair: #4a8c4a;
-        --vert-pale: #e8f2e8;
-        --fond: #f5f2ed;
-        --blanc: #ffffff;
-        --texte: #1a2e1a;
-        --texte2: #5a6e5a;
-        --texte3: #8a9e8a;
-        --vide: #c8d8c8;
-        --rouge: #c0392b;
-        --radius: 16px;
-    }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Backoffice — Suivi du temps</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=DM+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bleu:       #1e3a5f;
+  --bleu-clair: #2d5a8e;
+  --bleu-pale:  #e8f0fb;
+  --bleu-mid:   #c5d8f5;
+  --fond:       #f4f6fa;
+  --blanc:      #ffffff;
+  --texte:      #0f1f33;
+  --texte2:     #4a5e75;
+  --texte3:     #8a9db5;
+  --rouge:      #c0392b;
+  --vert:       #1a7a4a;
+  --vert-pale:  #e6f5ee;
+  --orange:     #c8621a;
+  --orange-pale:#fff0e4;
+  --radius:     12px;
+  --shadow:     0 1px 3px rgba(0,0,0,.08), 0 4px 16px rgba(0,0,0,.06);
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { font-family: 'DM Sans', sans-serif; background: var(--fond); color: var(--texte); min-height: 100vh; }
+.header { background: var(--bleu); color: white; padding: 0 32px; display: flex; align-items: center; justify-content: space-between; height: 64px; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 8px rgba(0,0,0,.2); }
+.header-brand { display: flex; align-items: center; gap: 12px; }
+.header-logo { width: 32px; height: 32px; background: rgba(255,255,255,.15); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 16px; }
+.header-title { font-size: 16px; font-weight: 600; opacity: .95; }
+.header-sub { font-size: 12px; opacity: .5; margin-top: 1px; }
+.header-admin { font-size: 13px; opacity: .6; }
+.tabs { background: var(--blanc); border-bottom: 1px solid #e0e8f0; padding: 0 32px; display: flex; }
+.tab { padding: 14px 20px; font-size: 14px; font-weight: 500; color: var(--texte3); cursor: pointer; border-bottom: 2px solid transparent; transition: all .15s; user-select: none; }
+.tab:hover { color: var(--bleu-clair); }
+.tab.active { color: var(--bleu); border-bottom-color: var(--bleu); }
+.main { padding: 32px; max-width: 1200px; margin: 0 auto; }
+.card { background: var(--blanc); border-radius: var(--radius); box-shadow: var(--shadow); margin-bottom: 20px; overflow: hidden; }
+.card-header { padding: 18px 24px; border-bottom: 1px solid #e8f0f8; display: flex; align-items: center; justify-content: space-between; }
+.card-title { font-size: 15px; font-weight: 600; }
+.card-body { padding: 24px; }
+.btn { display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; border-radius: 8px; border: none; font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 500; cursor: pointer; transition: all .15s; }
+.btn-primary { background: var(--bleu); color: white; }
+.btn-primary:hover { background: var(--bleu-clair); }
+.btn-secondary { background: var(--bleu-pale); color: var(--bleu); }
+.btn-secondary:hover { background: var(--bleu-mid); }
+.btn-danger { background: #fdecea; color: var(--rouge); }
+.btn-success { background: var(--vert-pale); color: var(--vert); }
+.btn-sm { padding: 5px 10px; font-size: 12px; }
+.btn:disabled { opacity: .5; cursor: not-allowed; }
+.table-wrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: 14px; }
+th { text-align: left; padding: 10px 14px; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; color: var(--texte3); border-bottom: 1px solid #e8f0f8; background: #fafcff; }
+td { padding: 12px 14px; border-bottom: 1px solid #f0f4f8; vertical-align: middle; }
+tr:last-child td { border-bottom: none; }
+tr:hover td { background: #fafcff; }
+.badge { display: inline-flex; align-items: center; gap: 4px; padding: 3px 8px; border-radius: 20px; font-size: 12px; font-weight: 500; }
+.badge::before { content: ''; width: 5px; height: 5px; border-radius: 50%; }
+.badge-actif { background: var(--vert-pale); color: var(--vert); }
+.badge-actif::before { background: var(--vert); }
+.badge-inactif { background: #f0f0f0; color: #888; }
+.badge-inactif::before { background: #bbb; }
+.badge-attente { background: var(--orange-pale); color: var(--orange); }
+.badge-attente::before { background: var(--orange); }
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.form-group { display: flex; flex-direction: column; gap: 6px; }
+label { font-size: 12px; font-weight: 600; color: var(--texte2); text-transform: uppercase; letter-spacing: .05em; }
+input, select { padding: 9px 12px; border: 1.5px solid #dce6f0; border-radius: 8px; font-family: 'DM Sans', sans-serif; font-size: 14px; color: var(--texte); background: white; outline: none; transition: border-color .15s; }
+input:focus, select:focus { border-color: var(--bleu-clair); }
+.modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.4); z-index: 500; align-items: center; justify-content: center; }
+.modal-overlay.open { display: flex; }
+.modal { background: white; border-radius: 16px; width: 560px; max-width: 95vw; box-shadow: 0 20px 60px rgba(0,0,0,.2); }
+.modal-header { padding: 20px 24px; border-bottom: 1px solid #e8f0f8; display: flex; align-items: center; justify-content: space-between; }
+.modal-title { font-size: 16px; font-weight: 600; }
+.modal-close { background: none; border: none; font-size: 20px; cursor: pointer; color: var(--texte3); padding: 4px; }
+.modal-body { padding: 24px; }
+.modal-footer { padding: 16px 24px; border-top: 1px solid #e8f0f8; display: flex; justify-content: flex-end; gap: 10px; }
+.token-link { font-family: 'DM Mono', monospace; font-size: 12px; color: var(--bleu-clair); background: var(--bleu-pale); padding: 3px 8px; border-radius: 6px; cursor: pointer; border: none; }
+.copy-toast { position: fixed; bottom: 24px; right: 24px; background: var(--texte); color: white; padding: 10px 16px; border-radius: 8px; font-size: 13px; opacity: 0; transition: opacity .3s; pointer-events: none; z-index: 999; }
+.copy-toast.show { opacity: 1; }
+.recap-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin-bottom: 24px; }
+.stat-card { background: var(--bleu-pale); border-radius: var(--radius); padding: 16px 20px; }
+.stat-num { font-family: 'DM Mono', monospace; font-size: 32px; font-weight: 500; color: var(--bleu); line-height: 1; }
+.stat-lbl { font-size: 12px; color: var(--texte2); margin-top: 4px; }
+.alerte-row td { background: #fff8f5 !important; }
+.alerte-badge { color: var(--orange); font-size: 13px; font-weight: 500; }
+.loader { display: flex; align-items: center; justify-content: center; padding: 48px; gap: 12px; color: var(--texte3); }
+.spinner { width: 24px; height: 24px; border: 2px solid #dce6f0; border-top-color: var(--bleu); border-radius: 50%; animation: spin .8s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.vue { display: none; }
+.vue.active { display: block; }
+.error-banner { background: #fdecea; border: 1px solid #f5c6c2; border-radius: 10px; padding: 14px 18px; color: var(--rouge); font-size: 14px; }
+.login-wrap { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: var(--bleu); }
+.login-box { background: white; border-radius: 20px; padding: 40px; width: 360px; box-shadow: 0 20px 60px rgba(0,0,0,.3); text-align: center; }
+.login-logo { font-size: 40px; margin-bottom: 16px; }
+.login-title { font-size: 22px; font-weight: 600; margin-bottom: 6px; }
+.login-sub { font-size: 13px; color: var(--texte3); margin-bottom: 28px; }
+.login-error { background: #fdecea; color: var(--rouge); border-radius: 8px; padding: 10px; font-size: 13px; margin-top: 12px; }
+</style>
+</head>
+<body>
+<div class="login-wrap" id="login-screen">
+  <div class="login-box">
+    <div class="login-logo">🌱</div>
+    <div class="login-title">Backoffice</div>
+    <div class="login-sub">Chants de la Terre — Suivi du temps</div>
+    <div class="form-group">
+      <label>Token d'accès</label>
+      <input type="password" id="login-token" placeholder="Votre token admin" onkeydown="if(event.key==='Enter') login()">
+    </div>
+    <button class="btn btn-primary" style="width:100%;margin-top:14px;justify-content:center;" onclick="login()">Accéder</button>
+    <div class="login-error" id="login-error" style="display:none"></div>
+  </div>
+</div>
+<div id="app" style="display:none">
+  <div class="header">
+    <div class="header-brand">
+      <div class="header-logo">🌱</div>
+      <div><div class="header-title">Backoffice</div><div class="header-sub">Chants de la Terre</div></div>
+    </div>
+    <div class="header-admin" id="header-admin"></div>
+  </div>
+  <div class="tabs">
+    <div class="tab active" onclick="showTab('collabs', this)">👥 Collaborateurs</div>
+    <div class="tab" onclick="showTab('periodes', this)">📅 Périodes</div>
+    <div class="tab" onclick="showTab('recap', this)">📊 Récap</div>
+  </div>
+  <div class="main">
+    <div class="vue active" id="vue-collabs">
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">Collaborateurs</span>
+          <button class="btn btn-primary btn-sm" onclick="ouvrirModalCollab()">+ Nouveau</button>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Nom</th><th>Structure</th><th>Contrat</th><th>H/sem</th><th>Statut</th><th>Activation</th><th>Lien</th><th>Actions</th></tr></thead>
+            <tbody id="collabs-tbody"><tr><td colspan="8"><div class="loader"><div class="spinner"></div>Chargement…</div></td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    <div class="vue" id="vue-periodes">
+      <div class="card">
+        <div class="card-header"><span class="card-title">Périodes récentes</span></div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Nom</th><th>Type</th><th>Début</th><th>Fin</th><th>Clôture</th><th>Statut</th></tr></thead>
+            <tbody id="periodes-tbody"><tr><td colspan="6"><div class="loader"><div class="spinner"></div>Chargement…</div></td></tr></tbody>
+          </table>
+        </div>
+      </div>
+      <div style="padding:12px 0;font-size:13px;color:var(--texte3);">💡 Les périodes sont gérées dans Google Sheets. L'ouverture, clôture et génération des jours sont automatiques.</div>
+    </div>
+    <div class="vue" id="vue-recap">
+      <div class="card" style="margin-bottom:20px">
+        <div class="card-header">
+          <span class="card-title" id="recap-titre">Récapitulatif — période en cours</span>
+          <select id="recap-periode-select" onchange="chargerRecap(this.value)" style="font-size:13px;padding:6px 10px;border-radius:8px;border:1.5px solid #dce6f0;">
+            <option value="">Période en cours</option>
+          </select>
+        </div>
+        <div class="card-body" id="recap-stats"><div class="loader"><div class="spinner"></div>Chargement…</div></div>
+      </div>
+      <div class="card">
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Collaborateur</th><th>Structure</th><th>Contrat</th><th>H/sem</th><th>Heures saisies</th><th>Jours saisis</th><th>Jours manquants</th><th>Dernière saisie</th></tr></thead>
+            <tbody id="recap-tbody"><tr><td colspan="8"><div class="loader"><div class="spinner"></div></div></td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="modal-overlay" id="modal-collab">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title" id="modal-titre">Nouveau collaborateur</span>
+      <button class="modal-close" onclick="fermerModal()">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="form-group"><label>Prénom *</label><input type="text" id="f-prenom" placeholder="Marie"></div>
+        <div class="form-group"><label>Nom *</label><input type="text" id="f-nom" placeholder="Dupont"></div>
+        <div class="form-group"><label>Email</label><input type="email" id="f-email" placeholder="marie@exemple.fr"></div>
+        <div class="form-group"><label>Structure *</label>
+          <select id="f-structure"><option value="">— Choisir —</option><option>SCEA</option><option>SAS</option><option>SARL</option></select>
+        </div>
+        <div class="form-group"><label>Type contrat *</label>
+          <select id="f-contrat"><option value="">— Choisir —</option><option>CDI</option><option>TESA</option></select>
+        </div>
+        <div class="form-group"><label>Heures / semaine</label><input type="number" id="f-heures" placeholder="35" min="1" max="60"></div>
+        <div class="form-group"><label>Statut</label>
+          <select id="f-statut"><option value="en_attente">En attente</option><option value="actif">Actif</option><option value="inactif">Inactif</option></select>
+        </div>
+        <div class="form-group"><label>Date d'activation</label><input type="date" id="f-date-activation"></div>
+      </div>
+      <div id="modal-error" style="display:none;margin-top:14px" class="error-banner"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="fermerModal()">Annuler</button>
+      <button class="btn btn-primary" id="btn-sauver" onclick="sauverCollab()">Enregistrer</button>
+    </div>
+  </div>
+</div>
+<div class="copy-toast" id="toast">✓ Lien copié !</div>
+<script>
+const API_URL = 'https://script.google.com/macros/s/AKfycbx1BTyA9scZnOy7cFKoif9KuV_PuEmotXtO5yCheB-IUESExdG5v5l3maZ-Wn-XBowwbg/exec';
+let ADMIN_TOKEN = new URLSearchParams(location.search).get('token') || '';
+let collabEnEdition = null;
 
-    * {
-        box-sizing: border-box;
-        margin: 0;
-        padding: 0;
-        -webkit-tap-highlight-color: transparent;
-    }
+function fmtDate(d) {
+  if (!d || d === '—' || d === '') return '—';
+  const parts = String(d).split('-');
+  if (parts.length !== 3) return d;
+  return parts[2] + '/' + parts[1] + '/' + parts[0];
+}
 
-    html, body {
-        font-family: 'DM Sans', sans-serif;
-        background: var(--fond);
-        color: var(--texte);
-        min-height: 100vh;
-        width: 100%;
-    }
+function jsonpFetch(url) {
+  return new Promise((resolve, reject) => {
+    const cb = 'cb_' + Math.random().toString(36).slice(2);
+    const script = document.createElement('script');
+    window[cb] = (data) => { delete window[cb]; document.head.removeChild(script); resolve(data); };
+    script.src = url + '&callback=' + cb;
+    script.onerror = () => reject(new Error('Erreur réseau'));
+    document.head.appendChild(script);
+  });
+}
 
-    .header {
-        background: var(--vert);
-        color: white;
-        padding: 48px 24px 20px;
-        position: relative;
-        overflow: hidden;
+async function login() {
+  const token = document.getElementById('login-token').value.trim();
+  if (!token) return;
+  ADMIN_TOKEN = token;
+  try {
+    const d = await jsonpFetch(API_URL + '?action=bo_getCollabs&token=' + encodeURIComponent(token));
+    if (!d.ok) {
+      document.getElementById('login-error').textContent = 'Token invalide.';
+      document.getElementById('login-error').style.display = 'block';
+      return;
     }
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('app').style.display = 'block';
+    document.getElementById('header-admin').textContent = 'Admin connecté';
+    renderCollabs(d.collabs);
+    chargerPeriodes();
+  } catch(e) {
+    document.getElementById('login-error').textContent = 'Erreur réseau.';
+    document.getElementById('login-error').style.display = 'block';
+  }
+}
 
-    .header::before {
-        content: '';
-        position: absolute;
-        top: -40px;
-        right: -40px;
-        width: 180px;
-        height: 180px;
-        border-radius: 50%;
-        background: rgba(255, 255, 255, .05);
-    }
+if (ADMIN_TOKEN) { document.getElementById('login-token').value = ADMIN_TOKEN; login(); }
 
-    .header-company {
-        font-size: 11px;
-        letter-spacing: .1em;
-        text-transform: uppercase;
-        opacity: .6;
-        margin-bottom: 4px;
-    }
+function showTab(nom, el) {
+  document.querySelectorAll('.vue').forEach(v => v.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('vue-' + nom).classList.add('active');
+  el.classList.add('active');
+  if (nom === 'recap') chargerRecap();
+}
 
-    .header-name {
-        font-size: 28px;
+async function chargerCollabs() {
+  document.getElementById('collabs-tbody').innerHTML = '<tr><td colspan="8"><div class="loader"><div class="spinner"></div>Chargement…</div></td></tr>';
+  try {
+    const d = await jsonpFetch(API_URL + '?action=bo_getCollabs&token=' + encodeURIComponent(ADMIN_TOKEN));
+    if (d.ok) renderCollabs(d.collabs);
+  } catch(e) {}
+}
+
+function renderCollabs(collabs) {
+  const tbody = document.getElementById('collabs-tbody');
+  if (!collabs || !collabs.length) {
+    tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--texte3);padding:32px">Aucun collaborateur</td></tr>';
+    return;
+  }
+  const sorted = [...collabs].sort((a, b) => (a.nom||'').localeCompare(b.nom||''));
+  tbody.innerHTML = sorted.map(c => {
+    const badgeClass = c.statut === 'actif' ? 'badge-actif' : c.statut === 'inactif' ? 'badge-inactif' : 'badge-attente';
+    const badgeLabel = c.statut === 'actif' ? 'Actif' : c.statut === 'inactif' ? 'Inactif' : 'En attente';
+    const toggleLabel = c.statut === 'inactif' ? 'Activer' : 'Désactiver';
+    const toggleClass = c.statut === 'inactif' ? 'btn-success' : 'btn-danger';
+    const collabJson = encodeURIComponent(JSON.stringify(c));
+    return `<tr>
+      <td><strong>${c.nomAffiche || ((c.prenom||'') + ' ' + (c.nom||'')).trim()}</strong></td>
+      <td>${c.structure||'—'}</td><td>${c.typeContrat||'—'}</td>
+      <td>${c.heuresHebdo ? c.heuresHebdo+'h' : '—'}</td>
+      <td><span class="badge ${badgeClass}">${badgeLabel}</span></td>
+      <td style="font-size:13px;color:var(--texte2)">${fmtDate(c.dateActivation)}</td>
+      <td>${c.lien ? `<button class="token-link" onclick="copierLien('${c.lien}')" title="${c.lien}">📋 ${c.token}</button>` : '—'}</td>
+      <td style="display:flex;gap:6px;flex-wrap:wrap">
+        <button class="btn btn-secondary btn-sm" onclick="ouvrirModalCollabData('${collabJson}')">✏️</button>
+        <button class="btn ${toggleClass} btn-sm" onclick="toggleCollab('${c.collabId}', this)">${toggleLabel}</button>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function copierLien(lien) {
+  navigator.clipboard.writeText(lien).then(() => {
+    const t = document.getElementById('toast');
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 2000);
+  });
+}
+
+function ouvrirModalCollab() {
+  collabEnEdition = null;
+  document.getElementById('modal-titre').textContent = 'Nouveau collaborateur';
+  ['f-prenom','f-nom','f-email','f-heures','f-date-activation'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('f-structure').value = '';
+  document.getElementById('f-contrat').value = '';
+  document.getElementById('f-statut').value = 'en_attente';
+  document.getElementById('modal-error').style.display = 'none';
+  document.getElementById('btn-sauver').disabled = false;
+  document.getElementById('btn-sauver').textContent = 'Enregistrer';
+  document.getElementById('modal-collab').classList.add('open');
+}
+
+function ouvrirModalCollabData(encoded) {
+  const c = JSON.parse(decodeURIComponent(encoded));
+  collabEnEdition = c;
+  document.getElementById('modal-titre').textContent = 'Modifier le collaborateur';
+  document.getElementById('f-prenom').value = c.prenom||'';
+  document.getElementById('f-nom').value = c.nom||'';
+  document.getElementById('f-email').value = c.email||'';
+  document.getElementById('f-structure').value = c.structure||'';
+  document.getElementById('f-contrat').value = c.typeContrat||'';
+  document.getElementById('f-heures').value = c.heuresHebdo||'';
+  document.getElementById('f-statut').value = c.statut||'actif';
+  document.getElementById('f-date-activation').value = c.dateActivation||'';
+  document.getElementById('modal-error').style.display = 'none';
+  document.getElementById('btn-sauver').disabled = false;
+  document.getElementById('btn-sauver').textContent = 'Enregistrer';
+  document.getElementById('modal-collab').classList.add('open');
+}
+
+function fermerModal() {
+  document.getElementById('modal-collab').classList.remove('open');
+  collabEnEdition = null;
+}
+
+async function sauverCollab() {
+  const btn = document.getElementById('btn-sauver');
+  const errBox = document.getElementById('modal-error');
+  errBox.style.display = 'none';
+  btn.disabled = true; btn.textContent = '⏳ Enregistrement…';
+  const params = {
+    action: 'bo_saveCollab',
+    collabId: collabEnEdition?.collabId || '',
+    prenom: document.getElementById('f-prenom').value.trim(),
+    nom: document.getElementById('f-nom').value.trim(),
+    email: document.getElementById('f-email').value.trim(),
+    structure: document.getElementById('f-structure').value,
+    typeContrat: document.getElementById('f-contrat').value,
+    heuresHebdo: document.getElementById('f-heures').value,
+    statut: document.getElementById('f-statut').value,
+    dateActivation: document.getElementById('f-date-activation').value,
+    token: ADMIN_TOKEN,
+  };
+  try {
+    const url = API_URL + '?' + Object.entries(params).map(([k,v]) => k+'='+encodeURIComponent(v)).join('&');
+    const d = await jsonpFetch(url);
+    if (!d.ok) { errBox.textContent = d.error||'Erreur.'; errBox.style.display='block'; btn.disabled=false; btn.textContent='Enregistrer'; return; }
+    if (d.action === 'created' && d.lien) { navigator.clipboard.writeText(d.lien).catch(()=>{}); alert('✓ Collaborateur créé !\n\nLien copié :\n' + d.lien); }
+    fermerModal(); chargerCollabs();
+  } catch(e) { errBox.textContent='Erreur réseau.'; errBox.style.display='block'; btn.disabled=false; btn.textContent='Enregistrer'; }
+}
+
+async function toggleCollab(collabId, btn) {
+  btn.disabled = true;
+  try {
+    const d = await jsonpFetch(API_URL + '?action=bo_toggleCollab&collabId=' + encodeURIComponent(collabId) + '&token=' + encodeURIComponent(ADMIN_TOKEN));
+    if (d.ok) chargerCollabs();
+  } catch(e) {}
+  btn.disabled = false;
+}
+
+async function chargerPeriodes() {
+  try {
+    const d = await jsonpFetch(API_URL + '?action=bo_getPeriodes&token=' + encodeURIComponent(ADMIN_TOKEN));
+    if (!d.ok) return;
+    const sel = document.getElementById('recap-periode-select');
+    sel.innerHTML = '<option value="">Période en cours</option>';
+    d.periodes.forEach(p => { const o = document.createElement('option'); o.value = p.periodeId; o.textContent = p.nomPeriode + ' (' + p.statut + ')'; sel.appendChild(o); });
+    const tbody = document.getElementById('periodes-tbody');
+    if (!d.periodes.length) { tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--texte3);padding:32px">Aucune période</td></tr>'; return; }
+    tbody.innerHTML = d.periodes.map(p => {
+      const sClass = p.statut==='ouverte' ? 'badge-actif' : p.statut==='cloturee' ? 'badge-inactif' : 'badge-attente';
+      const sLabel = p.statut==='ouverte' ? 'Ouverte' : p.statut==='cloturee' ? 'Clôturée' : 'Planifiée';
+      return `<tr><td><strong>${p.nomPeriode}</strong></td><td>${p.typeContrat||'Tous'}</td><td>${fmtDate(p.dateDebut)}</td><td>${fmtDate(p.dateFin)}</td><td>${fmtDate(p.dateCloture)}</td><td><span class="badge ${sClass}">${sLabel}</span></td></tr>`;
+    }).join('');
+  } catch(e) {}
+}
+
+async function chargerRecap(periodeId) {
+  document.getElementById('recap-stats').innerHTML = '<div class="loader"><div class="spinner"></div>Chargement…</div>';
+  document.getElementById('recap-tbody').innerHTML = '<tr><td colspan="8"><div class="loader"><div class="spinner"></div></div></td></tr>';
+  try {
+    let url = API_URL + '?action=bo_getRecap&token=' + encodeURIComponent(ADMIN_TOKEN);
+    if (periodeId) url += '&periodeId=' + encodeURIComponent(periodeId);
+    const d = await jsonpFetch(url);
+    if (!d.ok) return;
+    document.getElementById('recap-titre').textContent = 'Récap — ' + d.periode.nomPeriode;
+    const totalH = d.recap.reduce((s,c) => s+c.totalHeures, 0);
+    const nbSaisis = d.recap.reduce((s,c) => s+c.nbSaisis, 0);
+    const nbManquants = d.recap.reduce((s,c) => s+c.nbNonSaisis, 0);
+    document.getElementById('recap-stats').innerHTML = `
+      <div class="recap-grid">
+        <div class="stat-card"><div class="stat-num">${totalH.toFixed(1)}h</div><div class="stat-lbl">Heures totales</div></div>
+        <div class="stat-card"><div class="stat-num">${d.recap.length}</div><div class="stat-lbl">Collaborateurs actifs</div></div>
+        <div class="stat-card"><div class="stat-num">${nbSaisis}</div><div class="stat-lbl">Jours saisis</div></div>
+        <div class="stat-card" style="${nbManquants>0?'background:var(--orange-pale)':''}">
+          <div class="stat-num" style="${nbManquants>0?'color:var(--orange)':''}">${nbManquants}</div>
+          <div class="stat-lbl">Jours manquants</div>
+        </div>
+      </div>`;
+    const sorted = [...d.recap].sort((a,b) => { if(a.alerte&&!b.alerte) return -1; if(!a.alerte&&b.alerte) return 1; return a.nomAffiche.localeCompare(b.nomAffiche); });
+    document.getElementById('recap-tbody').innerHTML = sorted.map(c => `
+      <tr class="${c.alerte?'alerte-row':''}">
+        <td><strong>${c.nomAffiche}</strong></td>
+        <td>${c.structure||'—'}</td><td>${c.typeContrat||'—'}</td>
+        <td>${c.heuresHebdo?c.heuresHebdo+'h':'—'}</td>
+        <td><span style="font-family:monospace;font-weight:500">${c.totalHeures.toFixed(2)}h</span></td>
+        <td>${c.nbSaisis}</td>
+        <td>${c.nbNonSaisis>0?`<span class="alerte-badge">⚠️ ${c.nbNonSaisis}</span>`:'<span style="color:var(--vert)">✓ 0</span>'}</td>
+        <td style="font-size:13px;color:var(--texte2)">${fmtDate(c.derniereSaisie)}</td>
+      </tr>`).join('');
+  } catch(e) { document.getElementById('recap-stats').innerHTML = '<div style="color:var(--rouge)">Erreur de chargement</div>'; }
+}
+</script>
+</body>
+</html>        font-size: 28px;
         font-weight: 600;
         line-height: 1.1;
     }
