@@ -546,12 +546,20 @@ function initDrums() {
   mEl.innerHTML += '<div class="drum-spacer"></div>';
 }
 
+const PICKER_DEFAULTS = {
+  'c1-debut': '08:00',
+  'c1-fin':   '12:00',
+  'c2-debut': '13:00',
+  'c2-fin':   '17:00',
+};
+
 function openPicker(fieldId) {
   initDrums();
   pickerTarget = fieldId;
   const val = document.getElementById(fieldId).textContent;
-  const h = val !== '--:--' ? val.split(':')[0] : '08';
-  const m = val !== '--:--' ? val.split(':')[1] : '00';
+  const defaut = PICKER_DEFAULTS[fieldId] || '08:00';
+  const h = val !== '--:--' ? val.split(':')[0] : defaut.split(':')[0];
+  const m = val !== '--:--' ? val.split(':')[1] : defaut.split(':')[1];
   const hi = HOURS.indexOf(h);
   const mi = MINS.indexOf(m) === -1 ? 0 : MINS.indexOf(m);
   setTimeout(() => {
