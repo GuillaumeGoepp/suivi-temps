@@ -211,6 +211,7 @@ th.sort-desc::after { content: ' ↓'; opacity: 1; color: var(--bleu); }
         <div class="card-body" id="recap-stats"><div class="loader"><div class="spinner"></div>Chargement…</div></div>
       </div>
       <div class="card">
+        <div class="filter-bar"><div class="filter-group"><button class="filter-btn active" onclick="setFiltreRecap('',this)">Toutes</button><button class="filter-btn" onclick="setFiltreRecap('SCEA',this)">SCEA</button><button class="filter-btn" onclick="setFiltreRecap('SAS',this)">SAS</button><button class="filter-btn" onclick="setFiltreRecap('SARL',this)">SARL</button></div><span class="filter-count" id="recap-filter-count"></span></div>
         <div class="table-wrap">
           <table>
             <thead><tr><th>Collaborateur</th><th>Structure</th><th>Contrat</th><th>H/sem</th><th>Heures saisies</th><th>Jours saisis</th><th>Jours manquants</th><th>Dernière saisie</th></tr></thead>
