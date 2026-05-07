@@ -531,6 +531,21 @@ function renderRecapFiltered() {
   let result = filtreRecapStructure ? recapData.filter(c => c.structure === filtreRecapStructure) : recapData;
   const count = document.getElementById('recap-filter-count');
   if (count) count.textContent = result.length + ' / ' + recapData.length + ' collaborateur' + (recapData.length > 1 ? 's' : '');
+  // Recalcul des stats sur la sélection
+  const totalH = result.reduce((s,c) => s+c.totalHeures, 0);
+  const nbSaisis = result.reduce((s,c) => s+c.nbSaisis, 0);
+  const nbManquants = result.reduce((s,c) => s+c.nbNonSaisis, 0);
+  const statsEl = document.getElementById('recap-stats');
+  if (statsEl && result.length > 0) {
+    statsEl.innerHTML = `<div class="recap-grid">
+      <div class="stat-card"><div class="stat-num">${totalH.toFixed(1)}h</div><div class="stat-lbl">Heures totales</div></div>
+      <div class="stat-card"><div class="stat-num">${result.length}</div><div class="stat-lbl">Collaborateurs actifs</div></div>
+      <div class="stat-card"><div class="stat-num">${nbSaisis}</div><div class="stat-lbl">Jours saisis</div></div>
+      <div class="stat-card" style="${nbManquants>0?'background:var(--orange-pale)':''}">
+        <div class="stat-num" style="${nbManquants>0?'color:var(--orange)':''}">${nbManquants}</div>
+        <div class="stat-lbl">Jours manquants</div>
+      </div></div>`;
+  }
   const sorted = [...result].sort((a, b) => {
     if (a.alerte && !b.alerte) return -1;
     if (!a.alerte && b.alerte) return 1;
