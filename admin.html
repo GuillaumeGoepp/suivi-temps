@@ -587,19 +587,3 @@ async function chargerRecap(periodeId) {
 </script>
 </body>
 </html>
-      <tr class="${c.alerte?'alerte-row':''}">
-        <td><strong>${c.nomAffiche}</strong></td>
-        <td>${c.structure||'—'}</td><td>${c.typeContrat||'—'}</td>
-        <td>${c.heuresHebdo?c.heuresHebdo+'h':'—'}</td>
-        <td><span style="font-family:monospace;font-weight:500">${c.totalHeures.toFixed(2)}h</span></td>
-        <td>${c.nbSaisis}</td>
-        <td>${c.nbNonSaisis>0?'<span class="alerte-badge">⚠️ ' + c.nbNonSaisis + '</span>':'<span style="color:var(--vert)">✓ 0</span>'}</td>
-        <td style="font-size:13px;color:var(--texte2)">${fmtDate(c.derniereSaisie)}</td>
-      </tr>`).join('');
-  } catch(e) {
-    document.getElementById('recap-stats').innerHTML = '<div style="color:var(--rouge)">Erreur de chargement</div>';
-  }
-}
-</script>
-</body>
-</html>
