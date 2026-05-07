@@ -574,8 +574,19 @@ async function chargerRecap(periodeId) {
           <div class="stat-lbl">Jours manquants</div>
         </div>
       </div>`;
-    const sorted = [...d.recap].sort((a,b) => { if(a.alerte&&!b.alerte) return -1; if(!a.alerte&&b.alerte) return 1; return a.nomAffiche.localeCompare(b.nomAffiche); });
-    document.getElementById('recap-tbody').innerHTML = sorted.map(c => `
+    recapData = d.recap;
+    filtreRecapStructure = '';
+    document.querySelectorAll('#vue-recap .filter-btn').forEach(b => b.classList.remove('active'));
+    const fb = document.querySelector('#vue-recap .filter-btn');
+    if (fb) fb.classList.add('active');
+    renderRecapFiltered();
+  } catch(e) {
+    document.getElementById('recap-stats').innerHTML = '<div style="color:var(--rouge)">Erreur de chargement</div>';
+  }
+}
+</script>
+</body>
+</html>
       <tr class="${c.alerte?'alerte-row':''}">
         <td><strong>${c.nomAffiche}</strong></td>
         <td>${c.structure||'—'}</td><td>${c.typeContrat||'—'}</td>
