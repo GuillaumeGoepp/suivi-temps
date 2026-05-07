@@ -516,6 +516,41 @@ async function chargerPeriodes() {
   } catch(e) {}
 }
 
+let recapData = [];
+let filtreRecapStructure = '';
+
+function setFiltreRecap(structure, btn) {
+  filtreRecapStructure = structure;
+  document.querySelectorAll('#vue-recap .filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderRecapFiltered();
+}
+
+function renderRecapFiltered() {
+  let result = filtreRecapStructure ? recapData.filter(c => c.structure === filtreRecapStructure) : recapData;
+  const count = document.getElementById('recap-filter-count');
+  if (count) count.textContent = result.length + ' / ' + recapData.length + ' collaborateur' + (recapData.length > 1 ? 's' : '');
+  const sorted = [...result].sort((a, b) => {
+    if (a.alerte && !b.alerte) return -1;
+    if (!a.alerte && b.alerte) return 1;
+    return a.nomAffiche.localeCompare(b.nomAffiche);
+  });
+  document.getElementById('recap-tbody').innerHTML = sorted.length === 0
+    ? '<tr><td colspan="8" style="text-align:center;color:var(--texte3);padding:32px">Aucun résultat</td></tr>'
+    : sorted.map(c => `
+      <tr class="${c.alerte ? 'alerte-row' : ''}">
+        <td><strong>${c.nomAffiche}</strong></td>
+        <td>${c.structure || '—'}</td>
+        <td>${c.typeContrat || '—'}</td>
+        <td>${c.heuresHebdo ? c.heuresHebdo + 'h' : '—'}</td>
+        <td><span style="font-family:monospace;font-weight:500">${c.totalHeures.toFixed(2)}h</span></td>
+        <td>${c.nbSaisis}</td>
+        <td>${c.nbNonSaisis > 0 ? \`<span class="alerte-badge">⚠️ \${c.nbNonSaisis}</span>\` : '<span style="color:var(--vert)">✓ 0</span>'}</td>
+        <td style="font-size:13px;color:var(--texte2)">${fmtDate(c.derniereSaisie) || '—'}</td>
+      </tr>
+    `).join('');
+}
+
 async function chargerRecap(periodeId) {
   document.getElementById('recap-stats').innerHTML = '<div class="loader"><div class="spinner"></div>Chargement…</div>';
   document.getElementById('recap-tbody').innerHTML = '<tr><td colspan="8"><div class="loader"><div class="spinner"></div></div></td></tr>';
