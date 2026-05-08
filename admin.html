@@ -71,7 +71,27 @@ tr:hover td { background: #fafcff; }
 .form-group.full { grid-column: 1 / -1; }
 label { font-size: 12px; font-weight: 600; color: var(--texte2); text-transform: uppercase; letter-spacing: .05em; }
 input, select { padding: 9px 12px; border: 1.5px solid #dce6f0; border-radius: 8px; font-family: 'DM Sans', sans-serif; font-size: 14px; color: var(--texte); background: white; outline: none; transition: border-color .15s; }
-input:focus, select:focus { border-color: var(--bleu-clair); }
+input:focus, select:focus, textarea:focus { border-color: var(--bleu-clair); }
+textarea { resize: vertical; min-height: 72px; }
+.modal-lg { width: 800px; }
+.modal-body { max-height: 72vh; overflow-y: auto; }
+.jour-row { border: 1px solid #e8f0f8; border-radius: 10px; padding: 14px 16px; margin-bottom: 10px; transition: opacity .2s; }
+.jour-row.saving { opacity: .5; pointer-events: none; }
+.jour-row-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+.jour-date { font-weight: 600; font-size: 14px; }
+.jour-type-badge { font-size: 12px; color: var(--texte2); background: var(--bleu-pale); padding: 2px 8px; border-radius: 12px; }
+.creneaux-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 10px; }
+.creneau-group { display: flex; flex-direction: column; gap: 4px; }
+.creneau-label { font-size: 11px; font-weight: 600; color: var(--texte3); text-transform: uppercase; letter-spacing: .05em; }
+.creneau-inputs { display: flex; align-items: center; gap: 6px; }
+.creneau-inputs input[type=time] { width: 78px; font-size: 13px; padding: 6px 8px; }
+.creneau-sep { font-size: 12px; color: var(--texte3); }
+.total-badge { font-family: 'DM Mono', monospace; font-size: 13px; font-weight: 600; color: var(--bleu); background: var(--bleu-pale); padding: 3px 10px; border-radius: 12px; }
+.remarque-existante { background: var(--orange-pale); border-radius: 8px; padding: 8px 12px; font-size: 13px; color: var(--orange); margin-bottom: 6px; }
+.remarque-existante strong { display: block; font-size: 11px; text-transform: uppercase; letter-spacing: .05em; margin-bottom: 2px; opacity: .7; }
+.save-msg { font-size: 12px; margin-top: 6px; text-align: right; display: none; }
+.btn-warning { background: var(--orange-pale); color: var(--orange); }
+.btn-warning:hover { background: #ffe0c8; }
 .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.4); z-index: 500; align-items: center; justify-content: center; }
 .modal-overlay.open { display: flex; }
 .modal { background: white; border-radius: 16px; width: 560px; max-width: 95vw; box-shadow: 0 20px 60px rgba(0,0,0,.2); }
@@ -176,13 +196,14 @@ th.sort-desc::after { content: ' ↓'; opacity: 1; color: var(--bleu); }
                 <th>Contrat</th>
                 <th>H/sem</th>
                 <th class="sortable" onclick="trierCollabs('statut',this)">Statut</th>
+                <th>Équipe</th>
                 <th>Activation</th>
                 <th>Lien</th>
                 <th>Actions</th>
               </tr>
             </thead>
             <tbody id="collabs-tbody">
-              <tr><td colspan="8"><div class="loader"><div class="spinner"></div>Chargement…</div></td></tr>
+              <tr><td colspan="9"><div class="loader"><div class="spinner"></div>Chargement…</div></td></tr>
             </tbody>
           </table>
         </div>
@@ -214,8 +235,8 @@ th.sort-desc::after { content: ' ↓'; opacity: 1; color: var(--bleu); }
         <div class="filter-bar"><div class="filter-group"><button class="filter-btn active" onclick="setFiltreRecap('',this)">Toutes</button><button class="filter-btn" onclick="setFiltreRecap('SCEA',this)">SCEA</button><button class="filter-btn" onclick="setFiltreRecap('SAS',this)">SAS</button><button class="filter-btn" onclick="setFiltreRecap('SARL',this)">SARL</button></div><span class="filter-count" id="recap-filter-count"></span></div>
         <div class="table-wrap">
           <table>
-            <thead><tr><th>Collaborateur</th><th>Structure</th><th>Contrat</th><th>H/sem</th><th>Heures saisies</th><th>Jours saisis</th><th>Jours manquants</th><th>Dernière saisie</th></tr></thead>
-            <tbody id="recap-tbody"><tr><td colspan="8"><div class="loader"><div class="spinner"></div></div></td></tr></tbody>
+            <thead><tr><th>Collaborateur</th><th>Structure</th><th>Contrat</th><th>H/sem</th><th>Heures saisies</th><th>Jours saisis</th><th>Jours manquants</th><th>Dernière saisie</th><th>Saisies</th></tr></thead>
+            <tbody id="recap-tbody"><tr><td colspan="9"><div class="loader"><div class="spinner"></div></div></td></tr></tbody>
           </table>
         </div>
       </div>
@@ -244,6 +265,10 @@ th.sort-desc::after { content: ' ↓'; opacity: 1; color: var(--bleu); }
           <select id="f-statut"><option value="en_attente">En attente</option><option value="actif">Actif</option><option value="inactif">Inactif</option></select>
         </div>
         <div class="form-group"><label>Date d'activation</label><input type="date" id="f-date-activation"></div>
+        <div class="form-group full">
+          <label>Équipe</label>
+          <select id="f-equipe"><option value="">— Aucune équipe —</option></select>
+        </div>
       </div>
       <div id="modal-error" style="display:none;margin-top:14px" class="error-banner"></div>
     </div>
@@ -253,16 +278,32 @@ th.sort-desc::after { content: ' ↓'; opacity: 1; color: var(--bleu); }
     </div>
   </div>
 </div>
+<div class="modal-overlay" id="modal-saisies">
+  <div class="modal modal-lg">
+    <div class="modal-header">
+      <span class="modal-title" id="saisies-titre">Saisies</span>
+      <button class="modal-close" onclick="fermerModalSaisies()">×</button>
+    </div>
+    <div class="modal-body" id="saisies-body">
+      <div class="loader"><div class="spinner"></div>Chargement…</div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="fermerModalSaisies()">Fermer</button>
+    </div>
+  </div>
+</div>
 <div class="copy-toast" id="toast">✓ Lien copié !</div>
 <script>
 const API_URL = 'https://script.google.com/macros/s/AKfycbx1BTyA9scZnOy7cFKoif9KuV_PuEmotXtO5yCheB-IUESExdG5v5l3maZ-Wn-XBowwbg/exec';
 let ADMIN_TOKEN = new URLSearchParams(location.search).get('token') || '';
 let collabEnEdition = null;
 let collabsData = [];
+let equipesData = [];
 let filtreStatut = '';
 let filtreStructure = '';
 let triColonne = 'nom';
 let triDesc = false;
+let recapPeriodeId = '';
 
 function fmtDate(d) {
   if (!d || d === '—' || d === '') return '—';
@@ -306,6 +347,7 @@ async function login() {
     document.getElementById('header-admin').textContent = 'Admin connecté';
     renderCollabs(d.collabs);
     chargerPeriodes();
+    chargerEquipes();
   } catch(e) {
     document.getElementById('login-error').textContent = 'Erreur réseau.';
     document.getElementById('login-error').style.display = 'block';
@@ -322,8 +364,30 @@ function showTab(nom, el) {
   if (nom === 'recap') chargerRecap();
 }
 
+async function chargerEquipes() {
+  try {
+    const d = await jsonpFetch(API_URL + '?action=bo_getEquipes&token=' + encodeURIComponent(ADMIN_TOKEN));
+    if (!d.ok) return;
+    equipesData = d.equipes || [];
+    const sel = document.getElementById('f-equipe');
+    sel.innerHTML = '<option value="">— Aucune équipe —</option>';
+    equipesData.forEach(e => {
+      const o = document.createElement('option');
+      o.value = e.equipeId;
+      o.textContent = e.nomEquipe + (e.nomManager ? ' (' + e.nomManager + ')' : '');
+      sel.appendChild(o);
+    });
+  } catch(e) {}
+}
+
+function nomEquipe(equipeId) {
+  if (!equipeId) return '—';
+  const e = equipesData.find(x => x.equipeId === equipeId);
+  return e ? e.nomEquipe : equipeId;
+}
+
 async function chargerCollabs() {
-  document.getElementById('collabs-tbody').innerHTML = '<tr><td colspan="8"><div class="loader"><div class="spinner"></div>Chargement…</div></td></tr>';
+  document.getElementById('collabs-tbody').innerHTML = '<tr><td colspan="9"><div class="loader"><div class="spinner"></div>Chargement…</div></td></tr>';
   try {
     const d = await jsonpFetch(API_URL + '?action=bo_getCollabs&token=' + encodeURIComponent(ADMIN_TOKEN));
     if (d.ok) renderCollabs(d.collabs);
@@ -377,7 +441,7 @@ function renderCollabs(collabs) {
 function renderCollabsFiltered(collabs) {
   const tbody = document.getElementById('collabs-tbody');
   if (!collabs || !collabs.length) {
-    tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--texte3);padding:32px">Aucun résultat</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;color:var(--texte3);padding:32px">Aucun résultat</td></tr>';
     return;
   }
   tbody.innerHTML = collabs.map(c => {
@@ -392,6 +456,7 @@ function renderCollabsFiltered(collabs) {
       <td>${c.typeContrat||'—'}</td>
       <td>${c.heuresHebdo ? c.heuresHebdo+'h' : '—'}</td>
       <td><span class="badge ${badgeClass}">${badgeLabel}</span></td>
+      <td style="font-size:13px;color:var(--texte2)">${nomEquipe(c.equipeId)}</td>
       <td style="font-size:13px;color:var(--texte2)">${fmtDate(c.dateActivation)}</td>
       <td>${c.lien ? `<button class="token-link" onclick="copierLien('${c.lien}')" title="${c.lien}">📋 ${c.token}</button>` : '—'}</td>
       <td style="display:flex;gap:6px;flex-wrap:wrap">
@@ -417,6 +482,7 @@ function ouvrirModalCollab() {
   document.getElementById('f-structure').value = '';
   document.getElementById('f-contrat').value = '';
   document.getElementById('f-statut').value = 'en_attente';
+  document.getElementById('f-equipe').value = '';
   document.getElementById('modal-error').style.display = 'none';
   document.getElementById('btn-sauver').disabled = false;
   document.getElementById('btn-sauver').textContent = 'Enregistrer';
@@ -435,6 +501,7 @@ function ouvrirModalCollabData(encoded) {
   document.getElementById('f-heures').value = c.heuresHebdo||'';
   document.getElementById('f-statut').value = c.statut||'actif';
   document.getElementById('f-date-activation').value = c.dateActivation||'';
+  document.getElementById('f-equipe').value = c.equipeId||'';
   document.getElementById('modal-error').style.display = 'none';
   document.getElementById('btn-sauver').disabled = false;
   document.getElementById('btn-sauver').textContent = 'Enregistrer';
@@ -462,6 +529,7 @@ async function sauverCollab() {
     heuresHebdo: document.getElementById('f-heures').value,
     statut: document.getElementById('f-statut').value,
     dateActivation: document.getElementById('f-date-activation').value,
+    equipeId: document.getElementById('f-equipe').value,
     token: ADMIN_TOKEN,
   };
   try {
@@ -493,6 +561,127 @@ async function toggleCollab(collabId, btn) {
     if (d.ok) chargerCollabs();
   } catch(e) {}
   btn.disabled = false;
+}
+
+function fermerModalSaisies() {
+  document.getElementById('modal-saisies').classList.remove('open');
+}
+
+async function ouvrirSaisies(collabId, nomAffiche) {
+  document.getElementById('saisies-titre').textContent = 'Saisies — ' + nomAffiche;
+  document.getElementById('saisies-body').innerHTML = '<div class="loader"><div class="spinner"></div>Chargement…</div>';
+  document.getElementById('modal-saisies').classList.add('open');
+  try {
+    let url = API_URL + '?action=bo_getJoursCollab&token=' + encodeURIComponent(ADMIN_TOKEN)
+            + '&collabId=' + encodeURIComponent(collabId);
+    if (recapPeriodeId) url += '&periodeId=' + encodeURIComponent(recapPeriodeId);
+    const d = await jsonpFetch(url);
+    if (!d.ok) {
+      document.getElementById('saisies-body').innerHTML = '<div class="error-banner">Erreur lors du chargement.</div>';
+      return;
+    }
+    renderSaisies(d.jours || [], collabId);
+  } catch(e) {
+    document.getElementById('saisies-body').innerHTML = '<div class="error-banner">Erreur réseau.</div>';
+  }
+}
+
+function renderSaisies(jours, collabId) {
+  const body = document.getElementById('saisies-body');
+  if (!jours.length) {
+    body.innerHTML = '<div style="text-align:center;color:var(--texte3);padding:40px">Aucune saisie pour cette période.</div>';
+    return;
+  }
+  const typeLabel = t => ({ travaille:'Travaillé', conge:'Congé', absence:'Absence', ferie:'Férié' }[t] || t || '—');
+  body.innerHTML = jours.map((j, idx) => {
+    const jourId = (j.jourId||'').replace(/'/g,'');
+    const remarqueHtml = j.remarqueManager
+      ? `<div class="remarque-existante"><strong>Remarque en cours :</strong> ${j.remarqueManager}</div>` : '';
+    return `<div class="jour-row" id="jr-${idx}">
+      <div class="jour-row-header">
+        <span class="jour-date">${fmtDate(j.dateJour)} <span style="font-weight:400;color:var(--texte2);font-size:13px">${j.jourSemaine||''}</span></span>
+        <div style="display:flex;align-items:center;gap:8px">
+          <span class="jour-type-badge">${typeLabel(j.typeJour)}</span>
+          <span class="total-badge" id="tot-${idx}">${j.totalHeures != null ? Number(j.totalHeures).toFixed(2)+'h' : '—'}</span>
+        </div>
+      </div>
+      <div class="creneaux-grid">
+        ${[1,2,3].map(n => `
+          <div class="creneau-group">
+            <div class="creneau-label">Créneau ${n}</div>
+            <div class="creneau-inputs">
+              <input type="time" id="j${idx}-c${n}d" value="${j['c'+n+'Debut']||''}" onchange="majTotal(${idx})">
+              <span class="creneau-sep">→</span>
+              <input type="time" id="j${idx}-c${n}f" value="${j['c'+n+'Fin']||''}" onchange="majTotal(${idx})">
+            </div>
+          </div>`).join('')}
+      </div>
+      <div style="margin-bottom:10px">
+        <div class="creneau-label" style="margin-bottom:4px">Commentaire collab</div>
+        <input type="text" id="j${idx}-comm" value="${(j.commentaire||'').replace(/"/g,'&quot;')}" placeholder="Commentaire…" style="width:100%">
+      </div>
+      <div>
+        ${remarqueHtml}
+        <div class="creneau-label" style="margin-bottom:4px">Remarque manager / admin</div>
+        <textarea id="j${idx}-rem" placeholder="Ajouter ou modifier une remarque…">${(j.remarqueManager||'').replace(/</g,'&lt;')}</textarea>
+      </div>
+      <div style="display:flex;justify-content:flex-end;margin-top:10px">
+        <button class="btn btn-primary btn-sm" onclick="sauverJour(${idx},'${jourId}','${collabId}')">💾 Sauvegarder</button>
+      </div>
+      <div class="save-msg" id="jmsg-${idx}"></div>
+    </div>`;
+  }).join('');
+}
+
+function majTotal(idx) {
+  const toMin = t => { if (!t) return 0; const [h,m] = t.split(':').map(Number); return h*60+m; };
+  let total = 0;
+  [1,2,3].forEach(n => {
+    const d = document.getElementById(`j${idx}-c${n}d`)?.value;
+    const f = document.getElementById(`j${idx}-c${n}f`)?.value;
+    if (d && f) { const diff = toMin(f) - toMin(d); if (diff > 0) total += diff; }
+  });
+  const h = Math.floor(total/60), m = total%60;
+  document.getElementById('tot-'+idx).textContent = total > 0 ? `${h}h${m.toString().padStart(2,'0')}` : '—';
+}
+
+async function sauverJour(idx, jourId, collabId) {
+  const row = document.getElementById('jr-'+idx);
+  const msg = document.getElementById('jmsg-'+idx);
+  row.classList.add('saving');
+  msg.style.display = 'none';
+  const get = id => (document.getElementById(id)?.value || '').trim();
+  const params = {
+    action:          'bo_saveJour',
+    token:           ADMIN_TOKEN,
+    jourId,
+    collabId,
+    c1Debut:         get(`j${idx}-c1d`),
+    c1Fin:           get(`j${idx}-c1f`),
+    c2Debut:         get(`j${idx}-c2d`),
+    c2Fin:           get(`j${idx}-c2f`),
+    c3Debut:         get(`j${idx}-c3d`),
+    c3Fin:           get(`j${idx}-c3f`),
+    commentaire:     get(`j${idx}-comm`),
+    remarqueManager: get(`j${idx}-rem`),
+  };
+  try {
+    const url = API_URL + '?' + Object.entries(params).map(([k,v]) => k+'='+encodeURIComponent(v)).join('&');
+    const d = await jsonpFetch(url);
+    msg.style.display = 'block';
+    if (d.ok) {
+      msg.style.color = 'var(--vert)';
+      msg.textContent = '✓ Sauvegardé';
+    } else {
+      msg.style.color = 'var(--rouge)';
+      msg.textContent = d.error || 'Erreur lors de la sauvegarde.';
+    }
+  } catch(e) {
+    msg.style.display = 'block';
+    msg.style.color   = 'var(--rouge)';
+    msg.textContent   = 'Erreur réseau.';
+  }
+  row.classList.remove('saving');
 }
 
 async function chargerPeriodes() {
@@ -552,7 +741,7 @@ function renderRecapFiltered() {
     return a.nomAffiche.localeCompare(b.nomAffiche);
   });
   document.getElementById('recap-tbody').innerHTML = sorted.length === 0
-    ? '<tr><td colspan="8" style="text-align:center;color:var(--texte3);padding:32px">Aucun résultat</td></tr>'
+    ? '<tr><td colspan="9" style="text-align:center;color:var(--texte3);padding:32px">Aucun résultat</td></tr>'
     : sorted.map(c => `
       <tr class="${c.alerte ? 'alerte-row' : ''}">
         <td><strong>${c.nomAffiche}</strong></td>
@@ -563,13 +752,15 @@ function renderRecapFiltered() {
         <td>${c.nbSaisis}</td>
         <td>${c.nbNonSaisis > 0 ? '<span class="alerte-badge">⚠️ ' + c.nbNonSaisis + '</span>' : '<span style="color:var(--vert)">✓ 0</span>'}</td>
         <td style="font-size:13px;color:var(--texte2)">${fmtDate(c.derniereSaisie) || '—'}</td>
+        <td><button class="btn btn-warning btn-sm" onclick="ouvrirSaisies('${c.collabId}','${c.nomAffiche.replace(/'/g,\"\\\'\")}')">📋 Voir</button></td>
       </tr>
     `).join('');
 }
 
 async function chargerRecap(periodeId) {
+  recapPeriodeId = periodeId || '';
   document.getElementById('recap-stats').innerHTML = '<div class="loader"><div class="spinner"></div>Chargement…</div>';
-  document.getElementById('recap-tbody').innerHTML = '<tr><td colspan="8"><div class="loader"><div class="spinner"></div></div></td></tr>';
+  document.getElementById('recap-tbody').innerHTML = '<tr><td colspan="9"><div class="loader"><div class="spinner"></div></div></td></tr>';
   try {
     let url = API_URL + '?action=bo_getRecap&token=' + encodeURIComponent(ADMIN_TOKEN);
     if (periodeId) url += '&periodeId=' + encodeURIComponent(periodeId);
