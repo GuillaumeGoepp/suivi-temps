@@ -761,9 +761,9 @@
                 return;
             }
             jourData = d.jour;
-            document.getElementById('hdr-name').textContent = d.nomCollab || '';
+            document.getElementById('hdr-name').textContent = (d.collab && d.collab.nomAffiche) || '';
             document.getElementById('hdr-company').textContent = d.employeur || 'Chants de la Terre';
-            document.getElementById('hdr-periode').textContent = d.periode || 'Période en cours';
+            document.getElementById('hdr-periode').textContent = d.jour && d.jour.periodeId ? 'Période en cours' : 'Période en cours';
             renderJournee();
         } catch (e) {
             document.getElementById('journee-content').innerHTML = '<div class="error-box">Impossible de charger la journée.<br>' + e.message + '</div>';
@@ -826,8 +826,6 @@
             btnSave.textContent = 'Enregistrer';
             btnSave.style.opacity = '1';
         }
-        const dh = new Date(jourData.date + 'T12:00:00');
-        document.getElementById('hdr-date').textContent = JOURS[dh.getDay()] + ' ' + dh.getDate() + ' ' + MOIS[dh.getMonth()] + ' ' + dh.getFullYear();
         typeJour = jourData.typeJour || 'travaillée';
         setTimeBtn('c1-debut', jourData.c1Debut);
         setTimeBtn('c1-fin', jourData.c1Fin);
