@@ -402,7 +402,9 @@ async function login() {
 }
 
 if (ADMIN_TOKEN) { document.getElementById('login-token').value = ADMIN_TOKEN; login(); }
-document.querySelectorAll('.modal').forEach(rendreModalDeplacable);
+document.addEventListener('DOMContentLoaded', () => {
+  document.querySelectorAll('.modal').forEach(rendreModalDeplacable);
+});
 
 function showTab(nom, el) {
   document.querySelectorAll('.vue').forEach(v => v.classList.remove('active'));
