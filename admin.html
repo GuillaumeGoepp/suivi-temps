@@ -594,44 +594,73 @@ function renderSaisies(jours, collabId) {
     return;
   }
   const typeLabel = t => ({ travaille:'Travaillé', conge:'Congé', absence:'Absence', ferie:'Férié' }[t] || t || '—');
-  body.innerHTML = jours.map((j, idx) => {
-    const jourId = (j.jourId||'').replace(/'/g,'');
-    const remarqueHtml = j.remarqueManager
-      ? `<div class="remarque-existante"><strong>Remarque en cours :</strong> ${j.remarqueManager}</div>` : '';
-    return `<div class="jour-row" id="jr-${idx}">
-      <div class="jour-row-header">
-        <span class="jour-date">${fmtDate(j.dateJour)} <span style="font-weight:400;color:var(--texte2);font-size:13px">${j.jourSemaine||''}</span></span>
-        <div style="display:flex;align-items:center;gap:8px">
-          <span class="jour-type-badge">${typeLabel(j.typeJour)}</span>
-          <span class="total-badge" id="tot-${idx}">${j.totalHeures != null ? Number(j.totalHeures).toFixed(2)+'h' : '—'}</span>
-        </div>
-      </div>
-      <div class="creneaux-grid">
-        ${[1,2,3].map(n => `
-          <div class="creneau-group">
-            <div class="creneau-label">Créneau ${n}</div>
-            <div class="creneau-inputs">
-              <input type="time" id="j${idx}-c${n}d" value="${j['c'+n+'Debut']||''}" onchange="majTotal(${idx})">
-              <span class="creneau-sep">→</span>
-              <input type="time" id="j${idx}-c${n}f" value="${j['c'+n+'Fin']||''}" onchange="majTotal(${idx})">
-            </div>
-          </div>`).join('')}
-      </div>
-      <div style="margin-bottom:10px">
-        <div class="creneau-label" style="margin-bottom:4px">Commentaire collab</div>
-        <input type="text" id="j${idx}-comm" value="${(j.commentaire||'').replace(/"/g,'&quot;')}" placeholder="Commentaire…" style="width:100%">
-      </div>
-      <div>
-        ${remarqueHtml}
-        <div class="creneau-label" style="margin-bottom:4px">Remarque manager / admin</div>
-        <textarea id="j${idx}-rem" placeholder="Ajouter ou modifier une remarque…">${(j.remarqueManager||'').replace(/</g,'&lt;')}</textarea>
-      </div>
-      <div style="display:flex;justify-content:flex-end;margin-top:10px">
-        <button class="btn btn-primary btn-sm" onclick="sauverJour(${idx},'${jourId}','${collabId}')">💾 Sauvegarder</button>
-      </div>
-      <div class="save-msg" id="jmsg-${idx}"></div>
-    </div>`;
-  }).join('');
+  const typeBadge = t => {
+    const cls = t==='travaille'?'badge-actif':t==='conge'?'badge-attente':t==='absence'?'badge-attente':'badge-inactif';
+    return `<span class="badge ${cls}">${typeLabel(t)}</span>`;
+  };
+  body.innerHTML = `
+    <table style="width:100%;border-collapse:collapse;font-size:13px">
+      <thead>
+        <tr>
+          <th style="text-align:left;padding:8px 10px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--texte3);border-bottom:1px solid #e8f0f8;background:#fafcff">Date</th>
+          <th style="text-align:left;padding:8px 10px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--texte3);border-bottom:1px solid #e8f0f8;background:#fafcff">Type</th>
+          <th style="text-align:left;padding:8px 10px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--texte3);border-bottom:1px solid #e8f0f8;background:#fafcff">Créneau 1</th>
+          <th style="text-align:left;padding:8px 10px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--texte3);border-bottom:1px solid #e8f0f8;background:#fafcff">Créneau 2</th>
+          <th style="text-align:left;padding:8px 10px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--texte3);border-bottom:1px solid #e8f0f8;background:#fafcff">Créneau 3</th>
+          <th style="text-align:left;padding:8px 10px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--texte3);border-bottom:1px solid #e8f0f8;background:#fafcff">Total</th>
+          <th style="text-align:left;padding:8px 10px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--texte3);border-bottom:1px solid #e8f0f8;background:#fafcff">Commentaire</th>
+          <th style="text-align:left;padding:8px 10px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--texte3);border-bottom:1px solid #e8f0f8;background:#fafcff">Remarque</th>
+          <th style="text-align:left;padding:8px 10px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--texte3);border-bottom:1px solid #e8f0f8;background:#fafcff"></th>
+        </tr>
+      </thead>
+      <tbody>
+        ${jours.map((j, idx) => {
+          const jourId = (j.jourId||'').replace(/'/g,'');
+          const vide = !j.typeJour;
+          return `<tr id="jr-${idx}" style="${vide?'background:#fffbf5':''}">
+            <td style="padding:8px 10px;border-bottom:1px solid #f0f4f8;white-space:nowrap">
+              <strong style="font-size:13px">${j.dateJour||'—'}</strong>
+              <div style="font-size:11px;color:var(--texte3)">${j.jourSemaine||''}</div>
+            </td>
+            <td style="padding:8px 10px;border-bottom:1px solid #f0f4f8">${typeBadge(j.typeJour)}</td>
+            <td style="padding:6px 10px;border-bottom:1px solid #f0f4f8">
+              <div style="display:flex;align-items:center;gap:4px">
+                <input type="time" id="j${idx}-c1d" value="${j.c1Debut||''}" onchange="majTotal(${idx})" style="width:82px;font-size:12px;padding:4px 6px">
+                <span style="color:var(--texte3);font-size:11px">→</span>
+                <input type="time" id="j${idx}-c1f" value="${j.c1Fin||''}" onchange="majTotal(${idx})" style="width:82px;font-size:12px;padding:4px 6px">
+              </div>
+            </td>
+            <td style="padding:6px 10px;border-bottom:1px solid #f0f4f8">
+              <div style="display:flex;align-items:center;gap:4px">
+                <input type="time" id="j${idx}-c2d" value="${j.c2Debut||''}" onchange="majTotal(${idx})" style="width:82px;font-size:12px;padding:4px 6px">
+                <span style="color:var(--texte3);font-size:11px">→</span>
+                <input type="time" id="j${idx}-c2f" value="${j.c2Fin||''}" onchange="majTotal(${idx})" style="width:82px;font-size:12px;padding:4px 6px">
+              </div>
+            </td>
+            <td style="padding:6px 10px;border-bottom:1px solid #f0f4f8">
+              <div style="display:flex;align-items:center;gap:4px">
+                <input type="time" id="j${idx}-c3d" value="${j.c3Debut||''}" onchange="majTotal(${idx})" style="width:82px;font-size:12px;padding:4px 6px">
+                <span style="color:var(--texte3);font-size:11px">→</span>
+                <input type="time" id="j${idx}-c3f" value="${j.c3Fin||''}" onchange="majTotal(${idx})" style="width:82px;font-size:12px;padding:4px 6px">
+              </div>
+            </td>
+            <td style="padding:8px 10px;border-bottom:1px solid #f0f4f8">
+              <span class="total-badge" id="tot-${idx}">${j.totalHeures!=null&&j.totalHeures!==''?Number(j.totalHeures).toFixed(2)+'h':'—'}</span>
+            </td>
+            <td style="padding:6px 10px;border-bottom:1px solid #f0f4f8">
+              <input type="text" id="j${idx}-comm" value="${(j.commentaire||'').replace(/"/g,'&quot;')}" placeholder="…" style="width:120px;font-size:12px;padding:4px 6px">
+            </td>
+            <td style="padding:6px 10px;border-bottom:1px solid #f0f4f8">
+              <input type="text" id="j${idx}-rem" value="${(j.remarqueManager||'').replace(/"/g,'&quot;')}" placeholder="Remarque…" style="width:130px;font-size:12px;padding:4px 6px;${j.remarqueManager?'border-color:var(--orange);background:var(--orange-pale)':''}">
+            </td>
+            <td style="padding:6px 10px;border-bottom:1px solid #f0f4f8">
+              <button class="btn btn-primary btn-sm" onclick="sauverJour(${idx},'${jourId}','${collabId}')">💾</button>
+              <div class="save-msg" id="jmsg-${idx}" style="font-size:11px;margin-top:2px"></div>
+            </td>
+          </tr>`;
+        }).join('')}
+      </tbody>
+    </table>`;
 }
 
 function majTotal(idx) {
