@@ -567,7 +567,8 @@ function fermerModalSaisies() {
   document.getElementById('modal-saisies').classList.remove('open');
 }
 
-async function ouvrirSaisies(collabId, nomAffiche) {
+async function ouvrirSaisies(collabId, btn) {
+  const nomAffiche = btn.closest('tr').querySelector('td strong').textContent;
   document.getElementById('saisies-titre').textContent = 'Saisies — ' + nomAffiche;
   document.getElementById('saisies-body').innerHTML = '<div class="loader"><div class="spinner"></div>Chargement…</div>';
   document.getElementById('modal-saisies').classList.add('open');
@@ -752,7 +753,7 @@ function renderRecapFiltered() {
         <td>${c.nbSaisis}</td>
         <td>${c.nbNonSaisis > 0 ? '<span class="alerte-badge">⚠️ ' + c.nbNonSaisis + '</span>' : '<span style="color:var(--vert)">✓ 0</span>'}</td>
         <td style="font-size:13px;color:var(--texte2)">${fmtDate(c.derniereSaisie) || '—'}</td>
-        <td><button class="btn btn-warning btn-sm" onclick="ouvrirSaisies('${c.collabId}','${c.nomAffiche.replace(/'/g,\"\\\'\")}')">📋 Voir</button></td>
+        <td><button class="btn btn-warning btn-sm" onclick="ouvrirSaisies('${c.collabId}', this)">📋 Voir</button></td>
       </tr>
     `).join('');
 }
