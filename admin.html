@@ -305,6 +305,21 @@ let triColonne = 'nom';
 let triDesc = false;
 let recapPeriodeId = '';
 
+function fmtHeure(v) {
+  if (!v) return '';
+  const s = String(v);
+  if (/^\d{1,2}:\d{2}$/.test(s)) return s.padStart(5,'0');
+  try {
+    const d = new Date(s);
+    if (!isNaN(d)) {
+      const h = String(d.getUTCHours()).padStart(2,'0');
+      const m = String(d.getUTCMinutes()).padStart(2,'0');
+      return h + ':' + m;
+    }
+  } catch(e) {}
+  return '';
+}
+
 function fmtDate(d) {
   if (!d || d === '—' || d === '') return '—';
   const s = String(d);
@@ -625,23 +640,23 @@ function renderSaisies(jours, collabId) {
             <td style="padding:8px 10px;border-bottom:1px solid #f0f4f8">${typeBadge(j.typeJour)}</td>
             <td style="padding:6px 10px;border-bottom:1px solid #f0f4f8">
               <div style="display:flex;align-items:center;gap:4px">
-                <input type="time" id="j${idx}-c1d" value="${j.c1Debut||''}" onchange="majTotal(${idx})" style="width:82px;font-size:12px;padding:4px 6px">
+                <input type="time" id="j${idx}-c1d" value="${fmtHeure(j.c1Debut)}" onchange="majTotal(${idx})" style="width:82px;font-size:12px;padding:4px 6px">
                 <span style="color:var(--texte3);font-size:11px">→</span>
-                <input type="time" id="j${idx}-c1f" value="${j.c1Fin||''}" onchange="majTotal(${idx})" style="width:82px;font-size:12px;padding:4px 6px">
+                <input type="time" id="j${idx}-c1f" value="${fmtHeure(j.c1Fin)}" onchange="majTotal(${idx})" style="width:82px;font-size:12px;padding:4px 6px">
               </div>
             </td>
             <td style="padding:6px 10px;border-bottom:1px solid #f0f4f8">
               <div style="display:flex;align-items:center;gap:4px">
-                <input type="time" id="j${idx}-c2d" value="${j.c2Debut||''}" onchange="majTotal(${idx})" style="width:82px;font-size:12px;padding:4px 6px">
+                <input type="time" id="j${idx}-c2d" value="${fmtHeure(j.c2Debut)}" onchange="majTotal(${idx})" style="width:82px;font-size:12px;padding:4px 6px">
                 <span style="color:var(--texte3);font-size:11px">→</span>
-                <input type="time" id="j${idx}-c2f" value="${j.c2Fin||''}" onchange="majTotal(${idx})" style="width:82px;font-size:12px;padding:4px 6px">
+                <input type="time" id="j${idx}-c2f" value="${fmtHeure(j.c2Fin)}" onchange="majTotal(${idx})" style="width:82px;font-size:12px;padding:4px 6px">
               </div>
             </td>
             <td style="padding:6px 10px;border-bottom:1px solid #f0f4f8">
               <div style="display:flex;align-items:center;gap:4px">
-                <input type="time" id="j${idx}-c3d" value="${j.c3Debut||''}" onchange="majTotal(${idx})" style="width:82px;font-size:12px;padding:4px 6px">
+                <input type="time" id="j${idx}-c3d" value="${fmtHeure(j.c3Debut)}" onchange="majTotal(${idx})" style="width:82px;font-size:12px;padding:4px 6px">
                 <span style="color:var(--texte3);font-size:11px">→</span>
-                <input type="time" id="j${idx}-c3f" value="${j.c3Fin||''}" onchange="majTotal(${idx})" style="width:82px;font-size:12px;padding:4px 6px">
+                <input type="time" id="j${idx}-c3f" value="${fmtHeure(j.c3Fin)}" onchange="majTotal(${idx})" style="width:82px;font-size:12px;padding:4px 6px">
               </div>
             </td>
             <td style="padding:8px 10px;border-bottom:1px solid #f0f4f8">
