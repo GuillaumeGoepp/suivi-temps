@@ -307,12 +307,10 @@ th.sort-desc::after { content: ' ↓'; opacity: 1; color: var(--bleu); }
         <div class="form-group"><label>Type contrat</label>
           <select id="p-contrat"><option value="">Tous</option><option value="CDI">CDI</option><option value="TESA">TESA</option></select>
         </div>
-        <div class="form-group"><label>Statut</label>
-          <select id="p-statut"><option value="planifiee">Planifiée</option><option value="ouverte">Ouverte</option></select>
-        </div>
+
         <div class="form-group"><label>Date début *</label><input type="date" id="p-debut"></div>
         <div class="form-group"><label>Date fin *</label><input type="date" id="p-fin"></div>
-        <div class="form-group full"><label>Date clôture des saisies collaborateurs</label><input type="date" id="p-cloture"></div>
+
       </div>
       <div id="modal-periode-error" style="display:none;margin-top:14px" class="error-banner"></div>
     </div>
@@ -404,6 +402,7 @@ async function login() {
 }
 
 if (ADMIN_TOKEN) { document.getElementById('login-token').value = ADMIN_TOKEN; login(); }
+document.querySelectorAll('.modal').forEach(rendreModalDeplacable);
 
 function showTab(nom, el) {
   document.querySelectorAll('.vue').forEach(v => v.classList.remove('active'));
@@ -555,6 +554,31 @@ function ouvrirModalCollabData(encoded) {
   document.getElementById('btn-sauver').disabled = false;
   document.getElementById('btn-sauver').textContent = 'Enregistrer';
   document.getElementById('modal-collab').classList.add('open');
+}
+
+function rendreModalDeplacable(modalEl) {
+  const header = modalEl.querySelector('.modal-header');
+  if (!header) return;
+  let dx=0, dy=0, mx=0, my=0;
+  header.style.cursor = 'grab';
+  header.onmousedown = e => {
+    e.preventDefault();
+    mx = e.clientX; my = e.clientY;
+    header.style.cursor = 'grabbing';
+    document.onmousemove = e => {
+      dx = mx - e.clientX; dy = my - e.clientY;
+      mx = e.clientX; my = e.clientY;
+      modalEl.style.top = (modalEl.offsetTop - dy) + 'px';
+      modalEl.style.left = (modalEl.offsetLeft - dx) + 'px';
+      modalEl.style.position = 'fixed';
+      modalEl.style.margin = '0';
+    };
+    document.onmouseup = () => {
+      header.style.cursor = 'grab';
+      document.onmousemove = null;
+      document.onmouseup = null;
+    };
+  };
 }
 
 function fermerModal(id) {
@@ -784,8 +808,8 @@ async function sauverPeriode() {
     typeContrat,
     dateDebut,
     dateFin: document.getElementById('p-fin').value,
-    dateCloture: document.getElementById('p-cloture').value,
-    statut: document.getElementById('p-statut').value,
+    dateCloture: (() => { const d = new Date(document.getElementById('p-fin').value); d.setDate(d.getDate()+1); return d.toISOString().split('T')[0]; })(),
+    statut: 'planifiee',
   };
   try {
     const url = API_URL + '?action=bo_savePeriode&' + Object.entries(params).map(([k,v]) => k+'='+encodeURIComponent(v)).join('&');
