@@ -313,7 +313,7 @@ th.sort-desc::after { content: ' ↓'; opacity: 1; color: var(--bleu); }
         </div>
         <div class="form-group"><label>Date début *</label><input type="date" id="p-debut"></div>
         <div class="form-group"><label>Date fin *</label><input type="date" id="p-fin"></div>
-        <div class="form-group full"><label>Date clôture</label><input type="date" id="p-cloture"></div>
+        <div class="form-group full"><label>Date clôture des saisies collaborateurs</label><input type="date" id="p-cloture"></div>
       </div>
       <div id="modal-periode-error" style="display:none;margin-top:14px" class="error-banner"></div>
     </div>
@@ -558,9 +558,10 @@ function ouvrirModalCollabData(encoded) {
   document.getElementById('modal-collab').classList.add('open');
 }
 
-function fermerModal() {
-  document.getElementById('modal-collab').classList.remove('open');
-  collabEnEdition = null;
+function fermerModal(id) {
+  id = id || 'modal-collab';
+  document.getElementById(id).classList.remove('open');
+  if (id === 'modal-collab') collabEnEdition = null;
 }
 
 async function sauverCollab() {
