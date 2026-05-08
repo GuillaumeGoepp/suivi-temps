@@ -759,7 +759,6 @@ async function sauverPeriode() {
   errBox.style.display = 'none';
   btn.disabled = true; btn.textContent = '⏳ Enregistrement…';
   const params = {
-    action: 'bo_savePeriode',
     token: ADMIN_TOKEN,
     nomPeriode: document.getElementById('p-nom').value.trim(),
     typeContrat: document.getElementById('p-contrat').value,
@@ -769,7 +768,7 @@ async function sauverPeriode() {
     statut: document.getElementById('p-statut').value,
   };
   try {
-    const url = API_URL + '?' + Object.entries(params).map(([k,v]) => k+'='+encodeURIComponent(v)).join('&');
+    const url = API_URL + '?action=bo_savePeriode&' + Object.entries(params).map(([k,v]) => k+'='+encodeURIComponent(v)).join('&');
     const d = await jsonpFetch(url);
     if (!d.ok) {
       errBox.textContent = d.error || 'Erreur.';
