@@ -612,86 +612,64 @@ function renderSaisies(jours, collabId) {
     body.innerHTML = '<div style="text-align:center;color:var(--texte3);padding:40px">Aucune saisie pour cette période.</div>';
     return;
   }
-  const typeLabel = t => ({ travaille:'Travaillé', conge:'Congé', absence:'Absence', ferie:'Férié' }[t] || t || '—');
+  const typeLabel = t => ({ travaille:'Travaillé', conge:'Congé', absence:'Absence', ferie:'Férié', travaillée:'Travaillé' }[t] || t || '—');
   const typeBadge = t => {
-    const cls = t==='travaille'?'badge-actif':t==='conge'?'badge-attente':t==='absence'?'badge-attente':'badge-inactif';
-    return `<span class="badge ${cls}">${typeLabel(t)}</span>`;
+    const cls = (t==='travaille'||t==='travaillée')?'badge-actif':t==='conge'?'badge-attente':t==='absence'?'badge-attente':'badge-inactif';
+    return '<span class="badge '+cls+'">'+typeLabel(t)+'</span>';
   };
-  body.innerHTML = `
-    <table style="width:100%;border-collapse:collapse;font-size:13px">
-      <thead>
-        <tr>
-          <th style="text-align:left;padding:8px 10px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--texte3);border-bottom:1px solid #e8f0f8;background:#fafcff">Date</th>
-          <th style="text-align:left;padding:8px 10px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--texte3);border-bottom:1px solid #e8f0f8;background:#fafcff">Type</th>
-          <th style="text-align:left;padding:8px 10px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--texte3);border-bottom:1px solid #e8f0f8;background:#fafcff">Créneau 1</th>
-          <th style="text-align:left;padding:8px 10px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--texte3);border-bottom:1px solid #e8f0f8;background:#fafcff">Créneau 2</th>
-          <th style="text-align:left;padding:8px 10px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--texte3);border-bottom:1px solid #e8f0f8;background:#fafcff">Créneau 3</th>
-          <th style="text-align:left;padding:8px 10px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--texte3);border-bottom:1px solid #e8f0f8;background:#fafcff">Total</th>
-          <th style="text-align:left;padding:8px 10px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--texte3);border-bottom:1px solid #e8f0f8;background:#fafcff">Commentaire</th>
-          <th style="text-align:left;padding:8px 10px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--texte3);border-bottom:1px solid #e8f0f8;background:#fafcff">Remarque</th>
-          <th style="text-align:left;padding:8px 10px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--texte3);border-bottom:1px solid #e8f0f8;background:#fafcff"></th>
-        </tr>
-      </thead>
-      <tbody>
-        ${jours.map((j, idx) => {
-          const jourId = (j.jourId||'').replace(/'/g,'');
-          const vide = !j.typeJour;
-          return `<tr id="jr-${idx}" style="${vide?'background:#fffbf5':''}">
-            <td style="padding:8px 10px;border-bottom:1px solid #f0f4f8;white-space:nowrap">
-              <strong style="font-size:13px">${j.dateJour||'—'}</strong>
-              <div style="font-size:11px;color:var(--texte3)">${j.jourSemaine||''}</div>
-            </td>
-            <td style="padding:8px 10px;border-bottom:1px solid #f0f4f8">${typeBadge(j.typeJour)}</td>
-            <td style="padding:6px 10px;border-bottom:1px solid #f0f4f8">
-              <div style="display:flex;align-items:center;gap:4px">
-                <input type="time" id="j${idx}-c1d" value="${fmtHeure(j.c1Debut)}" onchange="majTotal(${idx})" style="width:82px;font-size:12px;padding:4px 6px">
-                <span style="color:var(--texte3);font-size:11px">→</span>
-                <input type="time" id="j${idx}-c1f" value="${fmtHeure(j.c1Fin)}" onchange="majTotal(${idx})" style="width:82px;font-size:12px;padding:4px 6px">
-              </div>
-            </td>
-            <td style="padding:6px 10px;border-bottom:1px solid #f0f4f8">
-              <div style="display:flex;align-items:center;gap:4px">
-                <input type="time" id="j${idx}-c2d" value="${fmtHeure(j.c2Debut)}" onchange="majTotal(${idx})" style="width:82px;font-size:12px;padding:4px 6px">
-                <span style="color:var(--texte3);font-size:11px">→</span>
-                <input type="time" id="j${idx}-c2f" value="${fmtHeure(j.c2Fin)}" onchange="majTotal(${idx})" style="width:82px;font-size:12px;padding:4px 6px">
-              </div>
-            </td>
-            <td style="padding:6px 10px;border-bottom:1px solid #f0f4f8">
-              <div style="display:flex;align-items:center;gap:4px">
-                <input type="time" id="j${idx}-c3d" value="${fmtHeure(j.c3Debut)}" onchange="majTotal(${idx})" style="width:82px;font-size:12px;padding:4px 6px">
-                <span style="color:var(--texte3);font-size:11px">→</span>
-                <input type="time" id="j${idx}-c3f" value="${fmtHeure(j.c3Fin)}" onchange="majTotal(${idx})" style="width:82px;font-size:12px;padding:4px 6px">
-              </div>
-            </td>
-            <td style="padding:8px 10px;border-bottom:1px solid #f0f4f8">
-              <span class="total-badge" id="tot-${idx}">${j.totalHeures!=null&&j.totalHeures!==''?Number(j.totalHeures).toFixed(2)+'h':'—'}</span>
-            </td>
-            <td style="padding:6px 10px;border-bottom:1px solid #f0f4f8">
-              <input type="text" id="j${idx}-comm" value="${(j.commentaire||'').replace(/"/g,'&quot;')}" placeholder="…" style="width:120px;font-size:12px;padding:4px 6px">
-            </td>
-            <td style="padding:6px 10px;border-bottom:1px solid #f0f4f8">
-              <input type="text" id="j${idx}-rem" value="${(j.remarqueManager||'').replace(/"/g,'&quot;')}" placeholder="Remarque…" style="width:130px;font-size:12px;padding:4px 6px;${j.remarqueManager?'border-color:var(--orange);background:var(--orange-pale)':''}">
-            </td>
-            <td style="padding:6px 10px;border-bottom:1px solid #f0f4f8">
-              <button class="btn btn-primary btn-sm" onclick="sauverJour(${idx},'${jourId}','${collabId}')">💾</button>
-              <div class="save-msg" id="jmsg-${idx}" style="font-size:11px;margin-top:2px"></div>
-            </td>
-          </tr>`;
-        }).join('')}
-      </tbody>
-    </table>`;
+  const th = s => '<th style="text-align:left;padding:8px 10px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--texte3);border-bottom:1px solid #e8f0f8;background:#fafcff;white-space:nowrap">'+s+'</th>';
+  const td = (content, extra) => '<td style="padding:8px 10px;border-bottom:1px solid #f0f4f8;'+(extra||'')+'">'+content+'</td>';
+  body.innerHTML = '<table style="width:100%;border-collapse:collapse;font-size:13px"><thead><tr>'
+    + th('Date') + th('Type') + th('Créneau 1') + th('Créneau 2') + th('Créneau 3') + th('Total') + th('Commentaire') + th('Remarque superviseur')
+    + '</tr></thead><tbody>'
+    + jours.map((j, idx) => {
+        const jourId = (j.jourId||'').replace(/'/g,'');
+        const vide = !j.typeJour;
+        const cren = (d, f) => (fmtHeure(d) && fmtHeure(f)) ? fmtHeure(d)+' → '+fmtHeure(f) : '—';
+        const hasRem = j.remarqueManager && j.remarqueManager.trim();
+        const remVal = (j.remarqueManager||'').replace(/"/g,'&quot;');
+        return '<tr style="'+(vide?'background:#fffbf5':'')+'">'
+          + td('<strong>'+( j.dateJour||'—')+'</strong><div style="font-size:11px;color:var(--texte3)">'+( j.jourSemaine||'')+'</div>', 'white-space:nowrap')
+          + td(typeBadge(j.typeJour))
+          + td(cren(j.c1Debut,j.c1Fin), 'font-family:monospace;font-size:12px;white-space:nowrap')
+          + td(cren(j.c2Debut,j.c2Fin), 'font-family:monospace;font-size:12px;white-space:nowrap')
+          + td(cren(j.c3Debut,j.c3Fin), 'font-family:monospace;font-size:12px;white-space:nowrap')
+          + td('<span style="font-family:monospace;font-weight:600;color:var(--bleu)">'+(j.totalHeures!=null&&j.totalHeures!==''?Number(j.totalHeures).toFixed(2)+'h':'—')+'</span>')
+          + td('<span style="font-size:12px;color:var(--texte2)">'+(j.commentaire||'—').replace(/</g,'&lt;')+'</span>')
+          + '<td style="padding:6px 10px;border-bottom:1px solid #f0f4f8">'
+          + '<div style="display:flex;align-items:center;gap:6px">'
+          + '<input type="text" id="j'+idx+'-rem" value="'+remVal+'" placeholder="Ajouter une remarque…" style="flex:1;min-width:180px;font-size:12px;padding:5px 8px;'+(hasRem?'border-color:var(--orange);background:var(--orange-pale)':'')+'">'
+          + '<button class="btn btn-warning btn-sm" onclick="sauverRemarque('+idx+',''+jourId+'')">✓</button>'
+          + '</div>'
+          + '<div class="save-msg" id="jmsg-'+idx+'" style="font-size:11px;margin-top:3px"></div>'
+          + '</td></tr>';
+      }).join('')
+    + '</tbody></table>';
 }
 
-function majTotal(idx) {
-  const toMin = t => { if (!t) return 0; const [h,m] = t.split(':').map(Number); return h*60+m; };
-  let total = 0;
-  [1,2,3].forEach(n => {
-    const d = document.getElementById(`j${idx}-c${n}d`)?.value;
-    const f = document.getElementById(`j${idx}-c${n}f`)?.value;
-    if (d && f) { const diff = toMin(f) - toMin(d); if (diff > 0) total += diff; }
+function sauverRemarque(idx, jourId) {
+  const msg = document.getElementById('jmsg-'+idx);
+  const remarque = (document.getElementById('j'+idx+'-rem')?.value || '').trim();
+  msg.style.display = 'none';
+  const url = API_URL + '?action=bo_saveRemarqueManager&token=' + encodeURIComponent(ADMIN_TOKEN)
+    + '&jourId=' + encodeURIComponent(jourId)
+    + '&remarque=' + encodeURIComponent(remarque);
+  jsonpFetch(url).then(d => {
+    msg.style.display = 'block';
+    if (d.ok) {
+      msg.style.color = 'var(--vert)';
+      msg.textContent = '✓ Remarque enregistrée';
+      const inp = document.getElementById('j'+idx+'-rem');
+      if (inp) { inp.style.borderColor = remarque ? 'var(--orange)' : ''; inp.style.background = remarque ? 'var(--orange-pale)' : ''; }
+    } else {
+      msg.style.color = 'var(--rouge)';
+      msg.textContent = d.error || 'Erreur.';
+    }
+  }).catch(() => {
+    msg.style.display = 'block';
+    msg.style.color = 'var(--rouge)';
+    msg.textContent = 'Erreur réseau.';
   });
-  const h = Math.floor(total/60), m = total%60;
-  document.getElementById('tot-'+idx).textContent = total > 0 ? `${h}h${m.toString().padStart(2,'0')}` : '—';
 }
 
 async function sauverJour(idx, jourId, collabId) {
