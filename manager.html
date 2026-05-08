@@ -353,7 +353,7 @@ function renderSaisies(jours, collabId) {
   body.innerHTML = '<table style="width:100%;border-collapse:collapse;font-size:13px"><thead><tr>'
     + th('Date') + th('Type') + th('Créneau 1') + th('Créneau 2') + th('Créneau 3') + th('Total') + th('Commentaire') + th('Remarque responsable')
     + '</tr></thead><tbody>'
-    + jours.map((j, idx) => {
+    + jours.filter(j => j.typeJour && j.typeJour !== '').map((j, idx) => {
         const jourId = (j.jourId||'').replace(/'/g,'');
         const vide = !j.typeJour;
         const cren = (d, f) => (fmtHeure(d) && fmtHeure(f)) ? fmtHeure(d)+' → '+fmtHeure(f) : '—';
