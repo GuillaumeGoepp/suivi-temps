@@ -779,9 +779,8 @@ function genNomPeriode(dateDebut, typeContrat) {
 
 function ouvrirModalPeriode() {
   document.getElementById('modal-periode-titre').textContent = 'Nouvelle période';
-  ['p-debut','p-fin','p-cloture'].forEach(id => document.getElementById(id).value = '');
+  ['p-debut','p-fin'].forEach(id => document.getElementById(id).value = '');
   document.getElementById('p-contrat').value = '';
-  document.getElementById('p-statut').value = 'planifiee';
   document.getElementById('modal-periode-error').style.display = 'none';
   document.getElementById('btn-sauver-periode').disabled = false;
   document.getElementById('btn-sauver-periode').textContent = 'Enregistrer';
