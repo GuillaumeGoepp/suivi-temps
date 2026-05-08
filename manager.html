@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Espace Responsable — Suivi du temps</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=DM+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bleu:       #1e3a5f;
+  --bleu-clair: #2d5a8e;
+  --bleu-pale:  #e8f0fb;
+  --bleu-mid:   #c5d8f5;
+  --fond:       #f4f6fa;
+  --blanc:      #ffffff;
+  --texte:      #0f1f33;
+  --texte2:     #4a5e75;
+  --texte3:     #8a9db5;
+  --rouge:      #c0392b;
+  --vert:       #1a7a4a;
+  --vert-pale:  #e6f5ee;
+  --orange:     #c8621a;
+  --orange-pale:#fff0e4;
+  --radius:     12px;
+  --shadow:     0 1px 3px rgba(0,0,0,.08), 0 4px 16px rgba(0,0,0,.06);
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { font-family: "DM Sans", sans-serif; background: var(--fond); color: var(--texte); min-height: 100vh; }
+.header { background: var(--bleu); color: white; padding: 0 32px; display: flex; align-items: center; justify-content: space-between; height: 64px; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 8px rgba(0,0,0,.2); }
+.header-brand { display: flex; align-items: center; gap: 12px; }
+.header-logo { width: 32px; height: 32px; background: rgba(255,255,255,.15); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 16px; }
+.header-title { font-size: 16px; font-weight: 600; opacity: .95; }
+.header-sub { font-size: 12px; opacity: .5; margin-top: 1px; }
+.header-info { font-size: 13px; opacity: .7; text-align: right; }
+.header-info strong { display: block; opacity: 1; }
+.main { padding: 32px; max-width: 1100px; margin: 0 auto; }
+.card { background: var(--blanc); border-radius: var(--radius); box-shadow: var(--shadow); margin-bottom: 20px; overflow: hidden; }
+.card-header { padding: 18px 24px; border-bottom: 1px solid #e8f0f8; display: flex; align-items: center; justify-content: space-between; }
+.card-title { font-size: 15px; font-weight: 600; color: var(--texte); }
+.card-body { padding: 24px; }
+.btn { display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; border-radius: 8px; border: none; font-family: "DM Sans", sans-serif; font-size: 14px; font-weight: 500; cursor: pointer; transition: all .15s; }
+.btn-primary { background: var(--bleu); color: white; }
+.btn-primary:hover { background: var(--bleu-clair); }
+.btn-secondary { background: var(--bleu-pale); color: var(--bleu); }
+.btn-secondary:hover { background: var(--bleu-mid); }
+.btn-warning { background: var(--orange-pale); color: var(--orange); }
+.btn-warning:hover { background: #ffe0c8; }
+.btn-sm { padding: 5px 10px; font-size: 12px; }
+.btn:disabled { opacity: .5; cursor: not-allowed; }
+.table-wrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: 14px; }
+th { text-align: left; padding: 10px 14px; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; color: var(--texte3); border-bottom: 1px solid #e8f0f8; background: #fafcff; white-space: nowrap; }
+td { padding: 12px 14px; border-bottom: 1px solid #f0f4f8; vertical-align: middle; }
+tr:last-child td { border-bottom: none; }
+tr:hover td { background: #fafcff; }
+.badge { display: inline-flex; align-items: center; gap: 4px; padding: 3px 8px; border-radius: 20px; font-size: 12px; font-weight: 500; }
+.badge::before { content: ""; width: 5px; height: 5px; border-radius: 50%; }
+.badge-actif { background: var(--vert-pale); color: var(--vert); }
+.badge-actif::before { background: var(--vert); }
+.badge-inactif { background: #f0f0f0; color: #888; }
+.badge-inactif::before { background: #bbb; }
+.badge-attente { background: var(--orange-pale); color: var(--orange); }
+.badge-attente::before { background: var(--orange); }
+.recap-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 16px; }
+.stat-card { background: var(--bleu-pale); border-radius: var(--radius); padding: 16px 20px; }
+.stat-num { font-family: "DM Mono", monospace; font-size: 32px; font-weight: 500; color: var(--bleu); line-height: 1; }
+.stat-lbl { font-size: 12px; color: var(--texte2); margin-top: 4px; }
+.alerte-row td { background: #fff8f5 !important; }
+.alerte-badge { color: var(--orange); font-size: 13px; font-weight: 500; }
+.loader { display: flex; align-items: center; justify-content: center; padding: 48px; gap: 12px; color: var(--texte3); }
+.spinner { width: 24px; height: 24px; border: 2px solid #dce6f0; border-top-color: var(--bleu); border-radius: 50%; animation: spin .8s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.error-banner { background: #fdecea; border: 1px solid #f5c6c2; border-radius: 10px; padding: 14px 18px; color: var(--rouge); font-size: 14px; }
+.login-wrap { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: var(--bleu); }
+.login-box { background: white; border-radius: 20px; padding: 40px; width: 360px; box-shadow: 0 20px 60px rgba(0,0,0,.3); text-align: center; }
+.login-logo { font-size: 40px; margin-bottom: 16px; }
+.login-title { font-size: 22px; font-weight: 600; margin-bottom: 6px; }
+.login-sub { font-size: 13px; color: var(--texte3); margin-bottom: 28px; }
+.login-error { background: #fdecea; color: var(--rouge); border-radius: 8px; padding: 10px; font-size: 13px; margin-top: 12px; }
+.form-group { display: flex; flex-direction: column; gap: 6px; text-align: left; }
+label { font-size: 12px; font-weight: 600; color: var(--texte2); text-transform: uppercase; letter-spacing: .05em; }
+input { padding: 9px 12px; border: 1.5px solid #dce6f0; border-radius: 8px; font-family: "DM Sans", sans-serif; font-size: 14px; color: var(--texte); background: white; outline: none; transition: border-color .15s; width: 100%; }
+input:focus { border-color: var(--bleu-clair); }
+.modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.4); z-index: 500; align-items: center; justify-content: center; }
+.modal-overlay.open { display: flex; }
+.modal-lg { background: white; border-radius: 16px; width: min(1200px, 96vw); box-shadow: 0 20px 60px rgba(0,0,0,.2); }
+.modal-header { padding: 20px 24px; border-bottom: 1px solid #e8f0f8; display: flex; align-items: center; justify-content: space-between; }
+.modal-title { font-size: 16px; font-weight: 600; }
+.modal-close { background: none; border: none; font-size: 20px; cursor: pointer; color: var(--texte3); line-height: 1; padding: 4px; }
+.modal-body { padding: 24px; max-height: 72vh; overflow-y: auto; overflow-x: auto; }
+.modal-footer { padding: 16px 24px; border-top: 1px solid #e8f0f8; display: flex; justify-content: flex-end; }
+.save-msg { font-size: 12px; margin-top: 3px; display: none; }
+</style>
+</head>
+<body>
+<div class="login-wrap" id="login-screen">
+  <div class="login-box">
+    <div class="login-logo">🌱</div>
+    <div class="login-title">Espace Responsable</div>
+    <div class="login-sub">Chants de la Terre — Suivi du temps</div>
+    <div class="form-group">
+      <label>Token d'accès</label>
+      <input type="password" id="login-token" placeholder="Votre token responsable" onkeydown="if(event.key==='Enter') login()">
+    </div>
+    <button class="btn btn-primary" style="width:100%;margin-top:14px;justify-content:center;" onclick="login()">Accéder</button>
+    <div class="login-error" id="login-error" style="display:none"></div>
+  </div>
+</div>
+<div id="app" style="display:none">
+  <div class="header">
+    <div class="header-brand">
+      <div class="header-logo">🌱</div>
+      <div>
+        <div class="header-title">Espace Responsable</div>
+        <div class="header-sub">Chants de la Terre</div>
+      </div>
+    </div>
+    <div class="header-info">
+      <strong id="header-equipe">—</strong>
+      <span id="header-responsable"></span>
+    </div>
+  </div>
+  <div class="main">
+    <div class="card" style="margin-bottom:20px">
+      <div class="card-header">
+        <span class="card-title" id="recap-titre">Récapitulatif — période en cours</span>
+        <select id="recap-periode-select" onchange="chargerRecap(this.value)" style="font-size:13px;padding:6px 10px;border-radius:8px;border:1.5px solid #dce6f0;">
+          <option value="">Période en cours</option>
+        </select>
+      </div>
+      <div class="card-body" id="recap-stats">
+        <div class="loader"><div class="spinner"></div>Chargement…</div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Collaborateur</th>
+              <th>Structure</th>
+              <th>Contrat</th>
+              <th>H/sem</th>
+              <th>Heures saisies</th>
+              <th>Jours saisis</th>
+              <th>Jours manquants</th>
+              <th>Dernière saisie</th>
+              <th>Saisies</th>
+            </tr>
+          </thead>
+          <tbody id="recap-tbody">
+            <tr><td colspan="9"><div class="loader"><div class="spinner"></div></div></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="modal-overlay" id="modal-saisies">
+  <div class="modal-lg">
+    <div class="modal-header">
+      <span class="modal-title" id="saisies-titre">Saisies</span>
+      <button class="modal-close" onclick="fermerSaisies()">×</button>
+    </div>
+    <div class="modal-body" id="saisies-body">
+      <div class="loader"><div class="spinner"></div>Chargement…</div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="fermerSaisies()">Fermer</button>
+    </div>
+  </div>
+</div>
+<script>
+const API_URL = 'https://script.google.com/macros/s/AKfycbx1BTyA9scZnOy7cFKoif9KuV_PuEmotXtO5yCheB-IUESExdG5v5l3maZ-Wn-XBowwbg/exec';
+let MANAGER_TOKEN = new URLSearchParams(location.search).get('token') || '';
+let recapData = [];
+let recapPeriodeId = '';
+
+function fmtDate(d) {
+  if (!d || d === '—' || d === '') return '—';
+  const s = String(d);
+  if (s.includes('T') || s.includes('Z')) {
+    const dt = new Date(s);
+    if (!isNaN(dt)) {
+      const p = n => String(n).padStart(2,'0');
+      return p(dt.getDate())+'/'+p(dt.getMonth()+1)+'/'+dt.getFullYear()+' à '+p(dt.getHours())+':'+p(dt.getMinutes());
+    }
+  }
+  const parts = s.split('-');
+  if (parts.length === 3 && parts[0].length === 4) return parts[2]+'/'+parts[1]+'/'+parts[0];
+  return d;
+}
+
+function fmtHeure(v) {
+  if (!v) return '';
+  const s = String(v).trim();
+  if (/^\d{1,2}:\d{2}$/.test(s)) return s.padStart(5,'0');
+  if (s.includes('T')) {
+    const d = new Date(s);
+    if (!isNaN(d)) {
+      const totalMin = d.getUTCHours() * 60 + d.getUTCMinutes() + Math.round(d.getUTCSeconds() / 60);
+      const rounded = Math.round(totalMin / 5) * 5;
+      const h = String(Math.floor(rounded / 60) % 24).padStart(2,'0');
+      const m = String(rounded % 60).padStart(2,'0');
+      return h + ':' + m;
+    }
+  }
+  return '';
+}
+
+function jsonpFetch(url) {
+  return new Promise((resolve, reject) => {
+    const cb = 'cb_' + Math.random().toString(36).slice(2);
+    const script = document.createElement('script');
+    window[cb] = (data) => { delete window[cb]; document.head.removeChild(script); resolve(data); };
+    script.src = url + '&callback=' + cb;
+    script.onerror = () => reject(new Error('Erreur réseau'));
+    document.head.appendChild(script);
+  });
+}
+
+async function login() {
+  const token = document.getElementById('login-token').value.trim();
+  if (!token) return;
+  MANAGER_TOKEN = token;
+  try {
+    const d = await jsonpFetch(API_URL + '?action=bo_getRecapManager&token=' + encodeURIComponent(token));
+    if (!d.ok) {
+      document.getElementById('login-error').textContent = 'Token invalide.';
+      document.getElementById('login-error').style.display = 'block';
+      return;
+    }
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('app').style.display = 'block';
+    chargerPeriodes();
+    afficherRecap(d);
+  } catch(e) {
+    document.getElementById('login-error').textContent = 'Erreur réseau.';
+    document.getElementById('login-error').style.display = 'block';
+  }
+}
+
+if (MANAGER_TOKEN) { document.getElementById('login-token').value = MANAGER_TOKEN; login(); }
+
+async function chargerPeriodes() {
+  try {
+    const d = await jsonpFetch(API_URL + '?action=bo_getPeriodes&token=' + encodeURIComponent(MANAGER_TOKEN));
+    if (!d.ok) return;
+    const sel = document.getElementById('recap-periode-select');
+    sel.innerHTML = '<option value="">Période en cours</option>';
+    d.periodes.forEach(p => {
+      const o = document.createElement('option');
+      o.value = p.periodeId;
+      o.textContent = p.nomPeriode + ' (' + p.statut + ')';
+      sel.appendChild(o);
+    });
+  } catch(e) {}
+}
+
+async function chargerRecap(periodeId) {
+  recapPeriodeId = periodeId || '';
+  document.getElementById('recap-stats').innerHTML = '<div class="loader"><div class="spinner"></div>Chargement…</div>';
+  document.getElementById('recap-tbody').innerHTML = '<tr><td colspan="9"><div class="loader"><div class="spinner"></div></div></td></tr>';
+  try {
+    let url = API_URL + '?action=bo_getRecapManager&token=' + encodeURIComponent(MANAGER_TOKEN);
+    if (periodeId) url += '&periodeId=' + encodeURIComponent(periodeId);
+    const d = await jsonpFetch(url);
+    if (!d.ok) return;
+    afficherRecap(d);
+  } catch(e) {
+    document.getElementById('recap-stats').innerHTML = '<div class="error-banner">Erreur de chargement.</div>';
+  }
+}
+
+function afficherRecap(d) {
+  if (d.recap && d.recap.length > 0) {
+    document.getElementById('header-equipe').textContent = d.recap[0].equipeNom || 'Mon équipe';
+  }
+  document.getElementById('recap-titre').textContent = 'Récap — ' + (d.periode ? d.periode.nomPeriode : 'période en cours');
+  recapData = d.recap || [];
+  const totalH      = recapData.reduce((s,c) => s+c.totalHeures, 0);
+  const nbSaisis    = recapData.reduce((s,c) => s+c.nbSaisis, 0);
+  const nbManquants = recapData.reduce((s,c) => s+c.nbNonSaisis, 0);
+  document.getElementById('recap-stats').innerHTML = `
+    <div class="recap-grid">
+      <div class="stat-card"><div class="stat-num">${totalH.toFixed(1)}h</div><div class="stat-lbl">Heures totales</div></div>
+      <div class="stat-card"><div class="stat-num">${recapData.length}</div><div class="stat-lbl">Collaborateurs</div></div>
+      <div class="stat-card"><div class="stat-num">${nbSaisis}</div><div class="stat-lbl">Jours saisis</div></div>
+      <div class="stat-card" style="${nbManquants>0?'background:var(--orange-pale)':''}">
+        <div class="stat-num" style="${nbManquants>0?'color:var(--orange)':''}">${nbManquants}</div>
+        <div class="stat-lbl">Jours manquants</div>
+      </div>
+    </div>`;
+  const sorted = [...recapData].sort((a, b) => {
+    if (a.alerte && !b.alerte) return -1;
+    if (!a.alerte && b.alerte) return 1;
+    return a.nomAffiche.localeCompare(b.nomAffiche);
+  });
+  document.getElementById('recap-tbody').innerHTML = sorted.length === 0
+    ? '<tr><td colspan="9" style="text-align:center;color:var(--texte3);padding:32px">Aucun collaborateur dans cette équipe.</td></tr>'
+    : sorted.map(c => `
+      <tr class="${c.alerte ? 'alerte-row' : ''}">
+        <td><strong>${c.nomAffiche}</strong></td>
+        <td>${c.structure || '—'}</td>
+        <td>${c.typeContrat || '—'}</td>
+        <td>${c.heuresHebdo ? c.heuresHebdo + 'h' : '—'}</td>
+        <td><span style="font-family:monospace;font-weight:500">${c.totalHeures.toFixed(2)}h</span></td>
+        <td>${c.nbSaisis}</td>
+        <td>${c.nbNonSaisis > 0 ? '<span class="alerte-badge">⚠️ ' + c.nbNonSaisis + '</span>' : '<span style="color:var(--vert)">✓ 0</span>'}</td>
+        <td style="font-size:13px;color:var(--texte2)">${fmtDate(c.derniereSaisie) || '—'}</td>
+        <td><button class="btn btn-warning btn-sm" onclick="ouvrirSaisies('${c.collabId}', this)">📋 Voir</button></td>
+      </tr>`).join('');
+}
+
+function fermerSaisies() {
+  document.getElementById('modal-saisies').classList.remove('open');
+}
+
+async function ouvrirSaisies(collabId, btn) {
+  const nomAffiche = btn.closest('tr').querySelector('td strong').textContent;
+  document.getElementById('saisies-titre').textContent = 'Saisies — ' + nomAffiche;
+  document.getElementById('saisies-body').innerHTML = '<div class="loader"><div class="spinner"></div>Chargement…</div>';
+  document.getElementById('modal-saisies').classList.add('open');
+  try {
+    let url = API_URL + '?action=bo_getJoursCollab&token=' + encodeURIComponent(MANAGER_TOKEN)
+            + '&collabId=' + encodeURIComponent(collabId);
+    if (recapPeriodeId) url += '&periodeId=' + encodeURIComponent(recapPeriodeId);
+    const d = await jsonpFetch(url);
+    if (!d.ok) {
+      document.getElementById('saisies-body').innerHTML = '<div class="error-banner">Erreur lors du chargement.</div>';
+      return;
+    }
+    renderSaisies(d.jours || [], collabId);
+  } catch(e) {
+    document.getElementById('saisies-body').innerHTML = '<div class="error-banner">Erreur réseau.</div>';
+  }
+}
+
+function renderSaisies(jours, collabId) {
+  const body = document.getElementById('saisies-body');
+  if (!jours.length) {
+    body.innerHTML = '<div style="text-align:center;color:var(--texte3);padding:40px">Aucune saisie pour cette période.</div>';
+    return;
+  }
+  const typeLabel = t => ({ travaille:'Travaillé', conge:'Congé', absence:'Absence', ferie:'Férié', travaillée:'Travaillé' }[t] || t || '—');
+  const typeBadge = t => {
+    const cls = (t==='travaille'||t==='travaillée')?'badge-actif':t==='conge'?'badge-attente':t==='absence'?'badge-attente':'badge-inactif';
+    return '<span class="badge '+cls+'">'+typeLabel(t)+'</span>';
+  };
+  const th = s => '<th style="text-align:left;padding:8px 10px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--texte3);border-bottom:1px solid #e8f0f8;background:#fafcff;white-space:nowrap">'+s+'</th>';
+  const td = (content, extra) => '<td style="padding:8px 10px;border-bottom:1px solid #f0f4f8;'+(extra||'')+'">'+content+'</td>';
+  body.innerHTML = '<table style="width:100%;border-collapse:collapse;font-size:13px"><thead><tr>'
+    + th('Date') + th('Type') + th('Créneau 1') + th('Créneau 2') + th('Créneau 3') + th('Total') + th('Commentaire') + th('Remarque responsable')
+    + '</tr></thead><tbody>'
+    + jours.map((j, idx) => {
+        const jourId = (j.jourId||'').replace(/'/g,'');
+        const vide = !j.typeJour;
+        const cren = (d, f) => (fmtHeure(d) && fmtHeure(f)) ? fmtHeure(d)+' → '+fmtHeure(f) : '—';
+        const hasRem = j.remarqueManager && j.remarqueManager.trim();
+        const remVal = (j.remarqueManager||'').replace(/"/g,'&quot;');
+        return '<tr style="'+(vide?'background:#fffbf5':'')+'">'
+          + td('<strong>'+(j.dateJour||'—')+'</strong><div style="font-size:11px;color:var(--texte3)">'+(j.jourSemaine||'')+'</div>', 'white-space:nowrap')
+          + td(typeBadge(j.typeJour))
+          + td(cren(j.c1Debut,j.c1Fin), 'font-family:monospace;font-size:12px;white-space:nowrap')
+          + td(cren(j.c2Debut,j.c2Fin), 'font-family:monospace;font-size:12px;white-space:nowrap')
+          + td(cren(j.c3Debut,j.c3Fin), 'font-family:monospace;font-size:12px;white-space:nowrap')
+          + td('<span style="font-family:monospace;font-weight:600;color:var(--bleu)">'+(j.totalHeures!=null&&j.totalHeures!==''?Number(j.totalHeures).toFixed(2)+'h':'—')+'</span>')
+          + td('<span style="font-size:12px;color:var(--texte2)">'+(j.commentaire||'—').replace(/</g,'&lt;')+'</span>')
+          + '<td style="padding:6px 10px;border-bottom:1px solid #f0f4f8">'
+          + '<div style="display:flex;align-items:center;gap:6px">'
+          + '<input type="text" id="j'+idx+'-rem" value="'+remVal+'" placeholder="Ajouter une remarque…" style="flex:1;min-width:180px;font-size:12px;padding:5px 8px;'+(hasRem?'border-color:var(--orange);background:var(--orange-pale)':'')+'">'
+          + '<button class="btn btn-warning btn-sm" onclick="sauverRemarque('+idx+',\''+jourId+'\')">Enregistrer</button>'
+          + '</div>'
+          + '<div class="save-msg" id="jmsg-'+idx+'"></div>'
+          + '</td></tr>';
+      }).join('')
+    + '</tbody></table>';
+}
+
+function sauverRemarque(idx, jourId) {
+  const msg = document.getElementById('jmsg-'+idx);
+  const remarque = (document.getElementById('j'+idx+'-rem')?.value || '').trim();
+  msg.style.display = 'none';
+  const url = API_URL + '?action=bo_saveRemarqueManager&token=' + encodeURIComponent(MANAGER_TOKEN)
+    + '&jourId=' + encodeURIComponent(jourId)
+    + '&remarque=' + encodeURIComponent(remarque);
+  jsonpFetch(url).then(d => {
+    msg.style.display = 'block';
+    if (d.ok) {
+      msg.style.color = 'var(--vert)';
+      msg.textContent = '✓ Remarque enregistrée';
+      const inp = document.getElementById('j'+idx+'-rem');
+      if (inp) { inp.style.borderColor = remarque ? 'var(--orange)' : ''; inp.style.background = remarque ? 'var(--orange-pale)' : ''; }
+    } else {
+      msg.style.color = 'var(--rouge)';
+      msg.textContent = d.error || 'Erreur.';
+    }
+  }).catch(() => {
+    msg.style.display = 'block';
+    msg.style.color = 'var(--rouge)';
+    msg.textContent = 'Erreur réseau.';
+  });
+}
+</script>
+</body>
+</html>
