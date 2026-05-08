@@ -211,7 +211,10 @@ th.sort-desc::after { content: ' ↓'; opacity: 1; color: var(--bleu); }
     </div>
     <div class="vue" id="vue-periodes">
       <div class="card">
-        <div class="card-header"><span class="card-title">Périodes récentes</span></div>
+        <div class="card-header">
+          <span class="card-title">Périodes</span>
+          <button class="btn btn-primary btn-sm" onclick="ouvrirModalPeriode()">+ Nouvelle période</button>
+        </div>
         <div class="table-wrap">
           <table>
             <thead><tr><th>Nom</th><th>Type</th><th>Début</th><th>Fin</th><th>Clôture</th><th>Statut</th></tr></thead>
@@ -289,6 +292,34 @@ th.sort-desc::after { content: ' ↓'; opacity: 1; color: var(--bleu); }
     </div>
     <div class="modal-footer">
       <button class="btn btn-secondary" onclick="fermerModalSaisies()">Fermer</button>
+    </div>
+  </div>
+</div>
+<!-- MODALE PERIODE -->
+<div class="modal-overlay" id="modal-periode">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title" id="modal-periode-titre">Nouvelle période</span>
+      <button class="modal-close" onclick="fermerModal('modal-periode')">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="form-group full"><label>Nom *</label><input type="text" id="p-nom" placeholder="PAIE_2026_06"></div>
+        <div class="form-group"><label>Type contrat</label>
+          <select id="p-contrat"><option value="">Tous</option><option value="CDI">CDI</option><option value="TESA">TESA</option></select>
+        </div>
+        <div class="form-group"><label>Statut</label>
+          <select id="p-statut"><option value="planifiee">Planifiée</option><option value="ouverte">Ouverte</option></select>
+        </div>
+        <div class="form-group"><label>Date début *</label><input type="date" id="p-debut"></div>
+        <div class="form-group"><label>Date fin *</label><input type="date" id="p-fin"></div>
+        <div class="form-group full"><label>Date clôture</label><input type="date" id="p-cloture"></div>
+      </div>
+      <div id="modal-periode-error" style="display:none;margin-top:14px" class="error-banner"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="fermerModal('modal-periode')">Annuler</button>
+      <button class="btn btn-primary" id="btn-sauver-periode" onclick="sauverPeriode()">Enregistrer</button>
     </div>
   </div>
 </div>
@@ -711,6 +742,65 @@ async function sauverJour(idx, jourId, collabId) {
   row.classList.remove('saving');
 }
 
+function ouvrirModalPeriode() {
+  document.getElementById('modal-periode-titre').textContent = 'Nouvelle période';
+  ['p-nom','p-debut','p-fin','p-cloture'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('p-contrat').value = '';
+  document.getElementById('p-statut').value = 'planifiee';
+  document.getElementById('modal-periode-error').style.display = 'none';
+  document.getElementById('btn-sauver-periode').disabled = false;
+  document.getElementById('btn-sauver-periode').textContent = 'Enregistrer';
+  document.getElementById('modal-periode').classList.add('open');
+}
+
+async function sauverPeriode() {
+  const btn = document.getElementById('btn-sauver-periode');
+  const errBox = document.getElementById('modal-periode-error');
+  errBox.style.display = 'none';
+  btn.disabled = true; btn.textContent = '⏳ Enregistrement…';
+  const params = {
+    action: 'bo_savePeriode',
+    token: ADMIN_TOKEN,
+    nomPeriode: document.getElementById('p-nom').value.trim(),
+    typeContrat: document.getElementById('p-contrat').value,
+    dateDebut: document.getElementById('p-debut').value,
+    dateFin: document.getElementById('p-fin').value,
+    dateCloture: document.getElementById('p-cloture').value,
+    statut: document.getElementById('p-statut').value,
+  };
+  try {
+    const url = API_URL + '?' + Object.entries(params).map(([k,v]) => k+'='+encodeURIComponent(v)).join('&');
+    const d = await jsonpFetch(url);
+    if (!d.ok) {
+      errBox.textContent = d.error || 'Erreur.';
+      errBox.style.display = 'block';
+      btn.disabled = false; btn.textContent = 'Enregistrer';
+      return;
+    }
+    fermerModal('modal-periode');
+    chargerPeriodes();
+  } catch(e) {
+    errBox.textContent = 'Erreur réseau.';
+    errBox.style.display = 'block';
+    btn.disabled = false; btn.textContent = 'Enregistrer';
+  }
+}
+
+function verifierAlertePeriodes(periodes) {
+  const planifiees = periodes.filter(p => p.statut === 'planifiee').length;
+  if (planifiees < 2) {
+    const alerte = document.createElement('div');
+    alerte.className = 'error-banner';
+    alerte.style.cssText = 'margin:16px 32px 0;background:#fff3cd;border-color:#ffc107;color:#856404;';
+    alerte.innerHTML = '⚠️ <strong>Attention</strong> — Il reste moins de 2 périodes planifiées. Pensez à saisir les périodes à venir !';
+    const main = document.querySelector('.main');
+    if (main && !document.getElementById('alerte-periodes')) {
+      alerte.id = 'alerte-periodes';
+      main.insertBefore(alerte, main.firstChild);
+    }
+  }
+}
+
 async function chargerPeriodes() {
   try {
     const d = await jsonpFetch(API_URL + '?action=bo_getPeriodes&token=' + encodeURIComponent(ADMIN_TOKEN));
@@ -723,6 +813,7 @@ async function chargerPeriodes() {
       o.textContent = p.nomPeriode + ' (' + p.statut + ')';
       sel.appendChild(o);
     });
+    verifierAlertePeriodes(d.periodes);
     const tbody = document.getElementById('periodes-tbody');
     if (!d.periodes.length) { tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--texte3);padding:32px">Aucune période</td></tr>'; return; }
     tbody.innerHTML = d.periodes.map(p => {
