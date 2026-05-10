@@ -942,7 +942,7 @@ async function ouvrirSaisiesPaie(collabId, btn) {
     const badge = document.getElementById('badge-validation-paie');
     if (badge) {
       badge.innerHTML = valide
-        ? '<span class="badge badge-actif">✅ Validé</span> <a href="#" onclick="toggleValidationModal();return false;" style="font-size:12px;color:var(--texte3);margin-left:4px">↩ dévalider</a>'
+        ? '<span class="badge badge-actif">✅ Validé</span>'
         : '<span class="badge badge-attente">⏳ En attente</span>';
     }
   }
