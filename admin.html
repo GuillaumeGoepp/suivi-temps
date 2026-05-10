@@ -258,6 +258,26 @@ th.sort-desc::after { content: ' ↓'; opacity: 1; color: var(--bleu); }
           <div id="paie-statut-global" style="padding:12px 16px;border-radius:10px;font-size:14px;font-weight:500"></div>
         </div>
       </div>
+      <!-- VUE DETAIL COLLAB -->
+      <div id="paie-detail" style="display:none">
+        <div class="card" style="margin-bottom:16px">
+          <div class="card-header" style="justify-content:space-between">
+            <div style="display:flex;align-items:center;gap:12px">
+              <button class="btn btn-secondary btn-sm" onclick="retourPaie()">← Retour</button>
+              <span class="card-title" id="paie-detail-titre"></span>
+            </div>
+            <div style="display:flex;align-items:center;gap:10px">
+              <input type="text" id="modal-note-admin" placeholder="Note admin…" style="width:220px;font-size:13px;padding:6px 10px">
+              <button class="btn btn-success btn-sm" id="btn-valider-collab" onclick="toggleValidationModal()">⬜ Valider</button>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div style="padding:12px 24px;border-bottom:1px solid #e8f0f8;display:flex;gap:6px" id="filtres-paie"></div>
+          <div class="table-wrap" id="table-saisies-paie" style="padding:0"></div>
+        </div>
+      </div>
+
       <div class="card" id="paie-card" style="display:none">
         <div class="card-header">
           <span class="card-title">Récapitulatif par collaborateur</span>
@@ -337,6 +357,26 @@ th.sort-desc::after { content: ' ↓'; opacity: 1; color: var(--bleu); }
           <div id="paie-statut-global" style="padding:12px 16px;border-radius:10px;font-size:14px;font-weight:500"></div>
         </div>
       </div>
+      <!-- VUE DETAIL COLLAB -->
+      <div id="paie-detail" style="display:none">
+        <div class="card" style="margin-bottom:16px">
+          <div class="card-header" style="justify-content:space-between">
+            <div style="display:flex;align-items:center;gap:12px">
+              <button class="btn btn-secondary btn-sm" onclick="retourPaie()">← Retour</button>
+              <span class="card-title" id="paie-detail-titre"></span>
+            </div>
+            <div style="display:flex;align-items:center;gap:10px">
+              <input type="text" id="modal-note-admin" placeholder="Note admin…" style="width:220px;font-size:13px;padding:6px 10px">
+              <button class="btn btn-success btn-sm" id="btn-valider-collab" onclick="toggleValidationModal()">⬜ Valider</button>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div style="padding:12px 24px;border-bottom:1px solid #e8f0f8;display:flex;gap:6px" id="filtres-paie"></div>
+          <div class="table-wrap" id="table-saisies-paie" style="padding:0"></div>
+        </div>
+      </div>
+
       <div class="card" id="paie-card" style="display:none">
         <div class="card-header">
           <span class="card-title">Récapitulatif par collaborateur</span>
@@ -837,36 +877,40 @@ async function sauverNote(collabId, note) {
   } catch(e) {}
 }
 
+function retourPaie() {
+  document.getElementById('paie-detail').style.display = 'none';
+  document.getElementById('paie-card').style.display = 'block';
+  _paieCurrentCollab = null;
+}
+
 async function ouvrirSaisiesPaie(collabId, btn) {
   _paieCurrentCollab = collabId;
   const nomAffiche = btn.closest('tr').querySelector('td strong').textContent;
-  document.getElementById('saisies-titre').textContent = 'Détail — ' + nomAffiche;
-  document.getElementById('saisies-body').innerHTML = '<div class="loader"><div class="spinner"></div>Chargement…</div>';
-  document.getElementById('modal-saisies').classList.add('open');
   // Initialiser note et bouton valider
-  const recapLine = recapData.find ? recapData.find(r => r.collabId===collabId) : null;
-  const noteEl = document.getElementById('modal-note-admin');
-  const btnVal = document.getElementById('btn-valider-collab');
-  if (noteEl) noteEl.value = '';
-  // Chercher dans paie
   const paieRecap = window._paie_recap_current || [];
   const ligne = paieRecap.find(r => r.collab_id===collabId);
-  if (ligne) {
-    if (noteEl) noteEl.value = ligne.note_admin||'';
-    const valide = ligne.statut_validation==='valide';
-    if (btnVal) {
-      btnVal.textContent = valide ? '✅ Annuler validation' : '⬜ Valider';
-      btnVal.className = valide ? 'btn btn-danger btn-sm' : 'btn btn-success btn-sm';
-    }
+  const noteEl = document.getElementById('modal-note-admin');
+  const btnVal = document.getElementById('btn-valider-collab');
+  if (noteEl) noteEl.value = ligne ? (ligne.note_admin||'') : '';
+  if (btnVal) {
+    const valide = ligne && ligne.statut_validation==='valide';
+    btnVal.textContent = valide ? '✅ Annuler validation' : '⬜ Valider';
+    btnVal.className = valide ? 'btn btn-danger btn-sm' : 'btn btn-success btn-sm';
   }
+  // Afficher vue détail
+  document.getElementById('paie-detail-titre').textContent = 'Détail — ' + nomAffiche;
+  document.getElementById('paie-card').style.display = 'none';
+  document.getElementById('paie-detail').style.display = 'block';
+  document.getElementById('table-saisies-paie').innerHTML = '<div class="loader"><div class="spinner"></div>Chargement…</div>';
+  document.getElementById('filtres-paie').innerHTML = '';
   try {
     const url = API_URL + '?action=bo_getJoursCollab&token=' + encodeURIComponent(ADMIN_TOKEN)
       + '&collabId=' + encodeURIComponent(collabId)
       + '&periodeId=' + encodeURIComponent(paieCurrentPeriode);
     const d = await jsonpFetch(url);
-    if (!d.ok) { document.getElementById('saisies-body').innerHTML = '<div class="error-banner">Erreur.</div>'; return; }
+    if (!d.ok) { document.getElementById('table-saisies-paie').innerHTML = '<div class="error-banner">Erreur.</div>'; return; }
     renderSaisiesPaie(d.jours || [], collabId);
-  } catch(e) { document.getElementById('saisies-body').innerHTML = '<div class="error-banner">Erreur réseau.</div>'; }
+  } catch(e) { document.getElementById('table-saisies-paie').innerHTML = '<div class="error-banner">Erreur réseau.</div>'; }
 }
 
 function renderSaisiesPaie(jours, collabId) {
@@ -883,14 +927,12 @@ function renderSaisiesPaie(jours, collabId) {
   window._jours_paie_current = jours;
   window._collab_paie_current = collabId;
 
-  body.innerHTML = '<div style="display:flex;gap:6px;margin-bottom:14px" id="filtres-paie">'
-    + ['tous','travaillée','CP','AT'].map(v =>
-        '<button class="filter-btn'+(v==='tous'?' active':'')+'" onclick="filtrerSaisiesPaie(this,\''+v+'\')" data-filtre="'+v+'">'+
-        (v==='tous'?'Tous':v)+'</button>').join('')
-    + '</div>'
-    + '<div id="table-saisies-paie">'
-    + buildTableSaisies(jours, 'tous', collabId)
-    + '</div>';
+  document.getElementById('filtres-paie').innerHTML =
+    ['tous','travaillée','CP','AT'].map(v =>
+      '<button class="filter-btn'+(v==='tous'?' active':'')+'" onclick="filtrerSaisiesPaie(this,\''+v+'\')" data-filtre="'+v+'">'+
+      (v==='tous'?'Tous':v)+'</button>').join('');
+
+  document.getElementById('table-saisies-paie').innerHTML = buildTableSaisies(jours, 'tous', collabId);
 }
 
 function filtrerSaisiesPaie(btn, filtre) {
