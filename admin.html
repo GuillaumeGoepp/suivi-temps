@@ -379,7 +379,11 @@ th.sort-desc::after { content: ' ↓'; opacity: 1; color: var(--bleu); }
     <div class="modal-body" id="saisies-body">
       <div class="loader"><div class="spinner"></div>Chargement…</div>
     </div>
-    <div class="modal-footer">
+    <div class="modal-footer" style="justify-content:space-between;align-items:center">
+      <div style="display:flex;align-items:center;gap:10px">
+        <input type="text" id="modal-note-admin" placeholder="Note admin…" style="width:220px;font-size:13px;padding:6px 10px">
+        <button class="btn btn-success btn-sm" id="btn-valider-collab" onclick="toggleValidationModal()">⬜ Valider</button>
+      </div>
       <button class="btn btn-secondary" onclick="fermerModalSaisies()">Fermer</button>
     </div>
   </div>
@@ -673,6 +677,16 @@ function rendreModalDeplacable(modalEl) {
   };
 }
 
+let _paieCurrentCollab = null;
+
+function toggleValidationModal() {
+  if (!_paieCurrentCollab) return;
+  const note = document.getElementById('modal-note-admin').value.trim();
+  sauverNote(_paieCurrentCollab, note);
+  toggleValidation(_paieCurrentCollab);
+  document.getElementById('modal-saisies').classList.remove('open');
+}
+
 function fermerModal(id) {
   id = id || 'modal-collab';
   document.getElementById(id).classList.remove('open');
@@ -760,6 +774,7 @@ async function initPaie() {
 }
 
 function renderPaie(recap, periodeId) {
+  window._paie_recap_current = recap;
   const nbTotal = recap.length;
   const nbValides = recap.filter(r => r.statut_validation === 'valide').length;
   const nbAttente = nbTotal - nbValides;
@@ -796,19 +811,9 @@ function renderPaie(recap, periodeId) {
       <td>${r.nb_jours_travailles||0}</td>
       <td>${r.nb_cp||0}</td>
       <td>${r.nb_at||0}</td>
-      <td>
-        <button class="btn btn-sm ${valide?'btn-success':'btn-secondary'}" onclick="toggleValidation('${collabEnc}')">
-          ${valide?'✅ Validé':'⬜ Valider'}
-        </button>
-      </td>
-      <td>
-        <input type="text" value="${(r.note_admin||'').replace(/"/g,'&quot;')}" placeholder="Note…"
-          style="width:130px;font-size:12px;padding:4px 8px"
-          onblur="sauverNote('${collabEnc}', this.value)">
-      </td>
-      <td>
-        <button class="btn btn-warning btn-sm" onclick="ouvrirSaisiesPaie('${collabEnc}', this)">📋 Détail</button>
-      </td>
+      <td>${valide?'<span class="badge badge-actif">✅ Validé</span>':'<span class="badge badge-attente">⏳ En attente</span>'}</td>
+      <td><span style="font-size:12px;color:var(--texte2)">${r.note_admin||'—'}</span></td>
+      <td><button class="btn btn-primary btn-sm" onclick="ouvrirSaisiesPaie('${collabEnc}', this)">📋 Détail</button></td>
     </tr>`;
   }).join('');
 }
@@ -833,10 +838,27 @@ async function sauverNote(collabId, note) {
 }
 
 async function ouvrirSaisiesPaie(collabId, btn) {
+  _paieCurrentCollab = collabId;
   const nomAffiche = btn.closest('tr').querySelector('td strong').textContent;
   document.getElementById('saisies-titre').textContent = 'Détail — ' + nomAffiche;
   document.getElementById('saisies-body').innerHTML = '<div class="loader"><div class="spinner"></div>Chargement…</div>';
   document.getElementById('modal-saisies').classList.add('open');
+  // Initialiser note et bouton valider
+  const recapLine = recapData.find ? recapData.find(r => r.collabId===collabId) : null;
+  const noteEl = document.getElementById('modal-note-admin');
+  const btnVal = document.getElementById('btn-valider-collab');
+  if (noteEl) noteEl.value = '';
+  // Chercher dans paie
+  const paieRecap = window._paie_recap_current || [];
+  const ligne = paieRecap.find(r => r.collab_id===collabId);
+  if (ligne) {
+    if (noteEl) noteEl.value = ligne.note_admin||'';
+    const valide = ligne.statut_validation==='valide';
+    if (btnVal) {
+      btnVal.textContent = valide ? '✅ Annuler validation' : '⬜ Valider';
+      btnVal.className = valide ? 'btn btn-danger btn-sm' : 'btn btn-success btn-sm';
+    }
+  }
   try {
     const url = API_URL + '?action=bo_getJoursCollab&token=' + encodeURIComponent(ADMIN_TOKEN)
       + '&collabId=' + encodeURIComponent(collabId)
@@ -880,107 +902,84 @@ function filtrerSaisiesPaie(btn, filtre) {
 function buildTableSaisies(jours, filtre, collabId) {
   const filtered = filtre==='tous' ? jours : jours.filter(j => j.typeJour===filtre);
   if (!filtered.length) return '<div style="text-align:center;color:var(--texte3);padding:24px">Aucun jour pour ce filtre.</div>';
-  const typeLabel = t => ({travaille:'Travaillé',travaillée:'Travaillé',CP:'CP',AT:'AT'}[t]||t||'—');
-  const typeBadge = t => {
-    const cls = (t==='travaille'||t==='travaillée')?'badge-actif':t==='CP'?'badge-attente':'badge-inactif';
-    return '<span class="badge '+cls+'">'+typeLabel(t)+'</span>';
-  };
   const th = s => '<th style="text-align:left;padding:8px 10px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--texte3);border-bottom:1px solid #e8f0f8;background:#fafcff;white-space:nowrap">'+s+'</th>';
-  const td = (c,x) => '<td style="padding:8px 10px;border-bottom:1px solid #f0f4f8;'+(x||'')+'">'+c+'</td>';
+  const td = (c,x) => '<td style="padding:6px 10px;border-bottom:1px solid #f0f4f8;'+(x||'')+'">'+c+'</td>';
+  const types = ['travaillée','CP','AT'];
   return '<table style="width:100%;border-collapse:collapse;font-size:13px"><thead><tr>'
-    + th('Date')+th('Jour')+th('Type')+th('Matin')+th('Après-midi')+th('Créneau 3')+th('Total')+th('Commentaire')+th('Remarque')
+    + th('Date')+th('Jour')+th('Type')+th('Matin')+th('Après-midi')+th('Créneau 3')+th('Total')+th('Commentaire')+th('')
     + '</tr></thead><tbody>'
-    + filtered.map((j,idx) => {
+    + filtered.map((j, idx) => {
         const jourId = (j.jourId||'').replace(/'/g,'');
-        const c1 = fmtHeure(j.c1Debut)&&fmtHeure(j.c1Fin)?fmtHeure(j.c1Debut)+' → '+fmtHeure(j.c1Fin):'—';
-        const c2 = fmtHeure(j.c2Debut)&&fmtHeure(j.c2Fin)?fmtHeure(j.c2Debut)+' → '+fmtHeure(j.c2Fin):'—';
-        const c3 = fmtHeure(j.c3Debut)&&fmtHeure(j.c3Fin)?fmtHeure(j.c3Debut)+' → '+fmtHeure(j.c3Fin):'—';
-        const hasRem = j.remarqueManager&&j.remarqueManager.trim();
-        const remVal = (j.remarqueManager||'').replace(/"/g,'&quot;');
-        return '<tr>'
-          + td('<strong>'+(j.dateJour||'—')+'</strong>','white-space:nowrap')
+        const tot = j.totalHeures!=null&&j.totalHeures!==''?Number(j.totalHeures).toFixed(2)+'h':'—';
+        const typeSelect = '<select id="jp'+idx+'-type" onchange="majTotalPaie('+idx+')" style="font-size:12px;padding:3px 6px;border-radius:6px;border:1.5px solid #dce6f0">'
+          + types.map(t => '<option value="'+t+'"'+(j.typeJour===t?' selected':'')+'>'+t+'</option>').join('')
+          + '</select>';
+        const timeInput = (id, val) => '<input type="time" id="'+id+'" value="'+fmtHeure(val)+'" onchange="majTotalPaie('+idx+')" style="width:82px;font-size:12px;padding:3px 6px">';
+        return '<tr id="jpr-'+idx+'">'
+          + td('<strong>'+(j.dateJour||'—')+'</strong><div style="font-size:11px;color:var(--texte3)">'+(j.jourSemaine||'')+'</div>','white-space:nowrap')
           + td(j.jourSemaine||'—')
-          + td(typeBadge(j.typeJour))
-          + td('<span style="font-family:monospace;font-size:12px">'+c1+'</span>','white-space:nowrap')
-          + td('<span style="font-family:monospace;font-size:12px">'+c2+'</span>','white-space:nowrap')
-          + td('<span style="font-family:monospace;font-size:12px">'+c3+'</span>','white-space:nowrap')
-          + td('<span style="font-family:monospace;font-weight:600;color:var(--bleu)">'+(j.totalHeures!=null&&j.totalHeures!==''?Number(j.totalHeures).toFixed(2)+'h':'—')+'</span>')
-          + td('<span style="font-size:12px;color:var(--texte2)">'+(j.commentaire||'—').replace(/</g,'&lt;')+'</span>')
+          + td(typeSelect)
+          + td('<div style="display:flex;align-items:center;gap:4px">'+timeInput('jp'+idx+'-c1d',j.c1Debut)+' <span style="color:var(--texte3)">→</span> '+timeInput('jp'+idx+'-c1f',j.c1Fin)+'</div>','white-space:nowrap')
+          + td('<div style="display:flex;align-items:center;gap:4px">'+timeInput('jp'+idx+'-c2d',j.c2Debut)+' <span style="color:var(--texte3)">→</span> '+timeInput('jp'+idx+'-c2f',j.c2Fin)+'</div>','white-space:nowrap')
+          + td('<div style="display:flex;align-items:center;gap:4px">'+timeInput('jp'+idx+'-c3d',j.c3Debut)+' <span style="color:var(--texte3)">→</span> '+timeInput('jp'+idx+'-c3f',j.c3Fin)+'</div>','white-space:nowrap')
+          + td('<span id="jptot-'+idx+'" style="font-family:monospace;font-weight:600;color:var(--bleu)">'+tot+'</span>')
+          + td('<input type="text" id="jp'+idx+'-comm" value="'+(j.commentaire||'').replace(/"/g,'&quot;')+'" placeholder="Commentaire…" style="width:120px;font-size:12px;padding:3px 6px">')
           + '<td style="padding:6px 10px;border-bottom:1px solid #f0f4f8">'
-          + '<div style="display:flex;align-items:center;gap:6px">'
-          + '<input type="text" id="jp'+idx+'-rem" value="'+remVal+'" placeholder="Remarque…" style="flex:1;min-width:140px;font-size:12px;padding:4px 8px;'+(hasRem?'border-color:var(--orange);background:var(--orange-pale)':'')+'">'
-          + '<button class="btn btn-warning btn-sm" onclick="sauverRemarque('+idx+',\''+jourId+'\')">Enregistrer</button>'
-          + '</div>'
-          + '<div class="save-msg" id="jmsg-'+idx+'"></div>'
+          + '<button class="btn btn-primary btn-sm" onclick="sauverJourPaie('+idx+',\''+jourId+'\',\''+collabId+'\')">💾</button>'
+          + '<div class="save-msg" id="jpmsg-'+idx+'"></div>'
           + '</td></tr>';
       }).join('')
     + '</tbody></table>';
 }
 
-function fermerModalSaisies() {
-  document.getElementById('modal-saisies').classList.remove('open');
+function majTotalPaie(idx) {
+  const toMin = t => { if (!t) return 0; const [h,m] = t.split(':').map(Number); return h*60+m; };
+  const type = document.getElementById('jp'+idx+'-type')?.value;
+  let total = 0;
+  if (type === 'travaillée') {
+    [1,2,3].forEach(n => {
+      const d = document.getElementById('jp'+idx+'-c'+n+'d')?.value;
+      const f = document.getElementById('jp'+idx+'-c'+n+'f')?.value;
+      if (d && f) { const diff = toMin(f)-toMin(d); if (diff>0) total+=diff; }
+    });
+  }
+  const h = Math.floor(total/60), m = total%60;
+  const el = document.getElementById('jptot-'+idx);
+  if (el) el.textContent = total>0 ? h+'h'+m.toString().padStart(2,'0') : '—';
 }
 
-async function ouvrirSaisies(collabId, btn) {
-  const nomAffiche = btn.closest('tr').querySelector('td strong').textContent;
-  document.getElementById('saisies-titre').textContent = 'Saisies — ' + nomAffiche;
-  document.getElementById('saisies-body').innerHTML = '<div class="loader"><div class="spinner"></div>Chargement…</div>';
-  document.getElementById('modal-saisies').classList.add('open');
-  try {
-    let url = API_URL + '?action=bo_getJoursCollab&token=' + encodeURIComponent(ADMIN_TOKEN)
-            + '&collabId=' + encodeURIComponent(collabId);
-    if (recapPeriodeId) url += '&periodeId=' + encodeURIComponent(recapPeriodeId);
-    const d = await jsonpFetch(url);
-    if (!d.ok) {
-      document.getElementById('saisies-body').innerHTML = '<div class="error-banner">Erreur lors du chargement.</div>';
-      return;
-    }
-    renderSaisies(d.jours || [], collabId);
-  } catch(e) {
-    document.getElementById('saisies-body').innerHTML = '<div class="error-banner">Erreur réseau.</div>';
-  }
-}
-
-function renderSaisies(jours, collabId) {
-  const body = document.getElementById('saisies-body');
-  if (!jours.length) {
-    body.innerHTML = '<div style="text-align:center;color:var(--texte3);padding:40px">Aucune saisie pour cette période.</div>';
-    return;
-  }
-  const typeLabel = t => ({ travaille:'Travaillé', conge:'Congé', absence:'Absence', ferie:'Férié', travaillée:'Travaillé' }[t] || t || '—');
-  const typeBadge = t => {
-    const cls = (t==='travaille'||t==='travaillée')?'badge-actif':t==='conge'?'badge-attente':t==='absence'?'badge-attente':'badge-inactif';
-    return '<span class="badge '+cls+'">'+typeLabel(t)+'</span>';
+async function sauverJourPaie(idx, jourId, collabId) {
+  const msg = document.getElementById('jpmsg-'+idx);
+  msg.style.display = 'none';
+  const get = id => (document.getElementById(id)?.value||'').trim();
+  const params = {
+    action: 'bo_saveJour',
+    token: ADMIN_TOKEN,
+    jourId,
+    collabId,
+    typeJour: get('jp'+idx+'-type'),
+    c1Debut: get('jp'+idx+'-c1d'),
+    c1Fin:   get('jp'+idx+'-c1f'),
+    c2Debut: get('jp'+idx+'-c2d'),
+    c2Fin:   get('jp'+idx+'-c2f'),
+    c3Debut: get('jp'+idx+'-c3d'),
+    c3Fin:   get('jp'+idx+'-c3f'),
+    commentaire: get('jp'+idx+'-comm'),
   };
-  const th = s => '<th style="text-align:left;padding:8px 10px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--texte3);border-bottom:1px solid #e8f0f8;background:#fafcff;white-space:nowrap">'+s+'</th>';
-  const td = (content, extra) => '<td style="padding:8px 10px;border-bottom:1px solid #f0f4f8;'+(extra||'')+'">'+content+'</td>';
-  body.innerHTML = '<table style="width:100%;border-collapse:collapse;font-size:13px"><thead><tr>'
-    + th('Date') + th('Type') + th('Créneau 1') + th('Créneau 2') + th('Créneau 3') + th('Total') + th('Commentaire') + th('Remarque superviseur')
-    + '</tr></thead><tbody>'
-    + jours.filter(j => (j.totalHeures && Number(j.totalHeures) > 0) || j.typeJour === 'CP' || j.typeJour === 'AT' || j.typeJour === 'conge' || j.typeJour === 'absence').map((j, idx) => {
-        const jourId = (j.jourId||'').replace(/'/g,'');
-        const vide = !j.typeJour;
-        const cren = (d, f) => (fmtHeure(d) && fmtHeure(f)) ? fmtHeure(d)+' → '+fmtHeure(f) : '—';
-        const hasRem = j.remarqueManager && j.remarqueManager.trim();
-        const remVal = (j.remarqueManager||'').replace(/"/g,'&quot;');
-        return '<tr style="'+(vide?'background:#fffbf5':'')+'">'
-          + td('<strong>'+( j.dateJour||'—')+'</strong><div style="font-size:11px;color:var(--texte3)">'+( j.jourSemaine||'')+'</div>', 'white-space:nowrap')
-          + td(typeBadge(j.typeJour))
-          + td(cren(j.c1Debut,j.c1Fin), 'font-family:monospace;font-size:12px;white-space:nowrap')
-          + td(cren(j.c2Debut,j.c2Fin), 'font-family:monospace;font-size:12px;white-space:nowrap')
-          + td(cren(j.c3Debut,j.c3Fin), 'font-family:monospace;font-size:12px;white-space:nowrap')
-          + td('<span style="font-family:monospace;font-weight:600;color:var(--bleu)">'+(j.totalHeures!=null&&j.totalHeures!==''?Number(j.totalHeures).toFixed(2)+'h':'—')+'</span>')
-          + td('<span style="font-size:12px;color:var(--texte2)">'+(j.commentaire||'—').replace(/</g,'&lt;')+'</span>')
-          + '<td style="padding:6px 10px;border-bottom:1px solid #f0f4f8">'
-          + '<div style="display:flex;align-items:center;gap:6px">'
-          + '<input type="text" id="j'+idx+'-rem" value="'+remVal+'" placeholder="Ajouter une remarque…" style="flex:1;min-width:180px;font-size:12px;padding:5px 8px;'+(hasRem?'border-color:var(--orange);background:var(--orange-pale)':'')+'">'
-          + '<button class="btn btn-warning btn-sm" onclick="sauverRemarque('+idx+',\''+jourId+'\')">Enregistrer</button>'
-          + '</div>'
-          + '<div class="save-msg" id="jmsg-'+idx+'" style="font-size:11px;margin-top:3px"></div>'
-          + '</td></tr>';
-      }).join('')
-    + '</tbody></table>';
+  try {
+    const url = API_URL+'?'+Object.entries(params).map(([k,v])=>k+'='+encodeURIComponent(v)).join('&');
+    const d = await jsonpFetch(url);
+    msg.style.display = 'block';
+    msg.style.color = d.ok ? 'var(--vert)' : 'var(--rouge)';
+    msg.textContent = d.ok ? '✓ Sauvegardé' : (d.error||'Erreur');
+    if (d.ok) majTotalPaie(idx);
+  } catch(e) {
+    msg.style.display = 'block';
+    msg.style.color = 'var(--rouge)';
+    msg.textContent = 'Erreur réseau';
+  }
 }
+
 
 function sauverRemarque(idx, jourId) {
   const msg = document.getElementById('jmsg-'+idx);
