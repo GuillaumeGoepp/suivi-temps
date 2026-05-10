@@ -282,7 +282,6 @@ th.sort-desc::after { content: ' ↓'; opacity: 1; color: var(--bleu); }
       <div class="card" id="paie-card" style="display:none">
         <div class="card-header">
           <span class="card-title">Récapitulatif par collaborateur</span>
-          <button class="btn btn-primary btn-sm" id="btn-init-paie" onclick="initPaie()">🔄 Initialiser / Recalculer</button>
         </div>
         <div class="table-wrap">
           <table>
@@ -382,7 +381,6 @@ th.sort-desc::after { content: ' ↓'; opacity: 1; color: var(--bleu); }
       <div class="card" id="paie-card" style="display:none">
         <div class="card-header">
           <span class="card-title">Récapitulatif par collaborateur</span>
-          <button class="btn btn-primary btn-sm" id="btn-init-paie" onclick="initPaie()">🔄 Initialiser / Recalculer</button>
         </div>
         <div class="table-wrap">
           <table>
@@ -1010,7 +1008,6 @@ function buildTableSaisies(jours, filtre, collabId) {
         const timeInput = (id, val) => '<input type="time" id="'+id+'" value="'+fmtHeure(val)+'" onchange="majTotalPaie('+idx+')" style="width:82px;font-size:12px;padding:3px 6px">';
         return '<tr id="jpr-'+idx+'">'
           + td('<strong>'+(j.dateJour||'—')+'</strong><div style="font-size:11px;color:var(--texte3)">'+(j.jourSemaine||'')+'</div>','white-space:nowrap')
-          + td(j.jourSemaine||'—')
           + td(typeSelect)
           + td('<div style="display:flex;align-items:center;gap:4px">'+timeInput('jp'+idx+'-c1d',j.c1Debut)+' <span style="color:var(--texte3)">→</span> '+timeInput('jp'+idx+'-c1f',j.c1Fin)+'</div>','white-space:nowrap')
           + td('<div style="display:flex;align-items:center;gap:4px">'+timeInput('jp'+idx+'-c2d',j.c2Debut)+' <span style="color:var(--texte3)">→</span> '+timeInput('jp'+idx+'-c2f',j.c2Fin)+'</div>','white-space:nowrap')
