@@ -994,10 +994,9 @@
         }
         const now = new Date(),
             today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-        const parseDMY = s => { const p=(s||'').split('/'); return p.length===3?p[2]+p[1]+p[0]:''; };
-        const sorted = [...jours].sort((a, b) => parseDMY(b.dateJour).localeCompare(parseDMY(a.dateJour)));
+        const sorted = [...jours].sort((a, b) => b.date.localeCompare(a.date));
         const passes = sorted.filter(j => {
-            const p=(j.dateJour||'').split('/'); const d = p.length===3?new Date(p[2],p[1]-1,p[0]):new Date(j.dateJour);
+            const d = new Date(j.date + 'T12:00:00');
             return new Date(d.getFullYear(), d.getMonth(), d.getDate()) <= today;
         }).slice(0, 6);
         const typeIcon = {
@@ -1012,15 +1011,13 @@
         };
         let html = '<div class="block"><div class="block-label">' + (periode || 'Période en cours') + '</div>';
         for (const j of passes) {
-            const p2=(j.dateJour||'').split('/');
-            const d = p2.length===3 ? new Date(p2[2],p2[1]-1,p2[0]) : new Date(j.dateJour);
-            const djour = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+            const d = new Date(j.date + 'T12:00:00'),
+                djour = new Date(d.getFullYear(), d.getMonth(), d.getDate());
             const isToday = djour.getTime() === today.getTime(),
                 joursDepuis = Math.round((today - djour) / 86400000),
                 modifiable = joursDepuis <= 5;
             const t = j.typeJour || 'travaillée',
                 nonTravaillee = t === 'CP' || t === 'AT';
-            const saisi = j.c1Debut !== '' || t === 'CP' || t === 'AT';
             let statutHtml = '';
             if (!j.saisi)
                 statutHtml = '<span style="font-size:13px;color:#c8833a;font-weight:500;">⚠️ Non saisi</span>';
