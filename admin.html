@@ -894,7 +894,7 @@ async function ouvrirSaisiesPaie(collabId, btn) {
   if (noteEl) noteEl.value = ligne ? (ligne.note_admin||'') : '';
   if (btnVal) {
     const valide = ligne && ligne.statut_validation==='valide';
-    btnVal.textContent = valide ? '✅ Annuler validation' : '⬜ Valider';
+    btnVal.textContent = valide ? '↩ Dévalider' : '✅ Valider';
     btnVal.className = valide ? 'btn btn-danger btn-sm' : 'btn btn-success btn-sm';
   }
   // Afficher vue détail
@@ -942,7 +942,7 @@ function filtrerSaisiesPaie(btn, filtre) {
 }
 
 function buildTableSaisies(jours, filtre, collabId) {
-  const filtered = filtre==='tous' ? jours : jours.filter(j => j.typeJour===filtre);
+  const filtered = filtre==='tous' ? jours : jours.filter(j => j.typeJour===filtre || (!j.typeJour && filtre==='tous'));
   if (!filtered.length) return '<div style="text-align:center;color:var(--texte3);padding:24px">Aucun jour pour ce filtre.</div>';
   const th = s => '<th style="text-align:left;padding:8px 10px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--texte3);border-bottom:1px solid #e8f0f8;background:#fafcff;white-space:nowrap">'+s+'</th>';
   const td = (c,x) => '<td style="padding:6px 10px;border-bottom:1px solid #f0f4f8;'+(x||'')+'">'+c+'</td>';
