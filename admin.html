@@ -862,7 +862,7 @@ function renderSaisiesPaie(jours, collabId) {
 
   body.innerHTML = '<div style="display:flex;gap:6px;margin-bottom:14px" id="'+filtreId+'">'
     + ['tous','travaillée','CP','AT'].map(v =>
-        '<button class="filter-btn'+(v==='tous'?' active':'')+'" onclick="filtrerSaisiesPaie(''+v+'',''+filtreId+'')" data-filtre="'+v+'">'+
+        '<button class="filter-btn'+(v==='tous'?' active':'')+'" onclick="filtrerSaisiesPaie(\''+v+'\')" data-filtre="'+v+'">'+
         (v==='tous'?'Tous':v)+'</button>').join('')
     + '</div>'
     + '<div id="table-saisies-paie">'
