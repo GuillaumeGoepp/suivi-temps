@@ -496,7 +496,7 @@ async function login() {
 
 if (ADMIN_TOKEN) { document.getElementById('login-token').value = ADMIN_TOKEN; login(); }
 document.addEventListener('DOMContentLoaded', () => {
-  document.querySelectorAll('.modal').forEach(rendreModalDeplacable);
+  document.querySelectorAll('.modal, .modal-lg').forEach(rendreModalDeplacable);
 });
 
 function showTab(nom, el) {
