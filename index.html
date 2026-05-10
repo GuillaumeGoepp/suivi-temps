@@ -1020,6 +1020,7 @@
                 modifiable = joursDepuis <= 5;
             const t = j.typeJour || 'travaillée',
                 nonTravaillee = t === 'CP' || t === 'AT';
+            const saisi = j.c1Debut !== '' || t === 'CP' || t === 'AT';
             let statutHtml = '';
             if (!j.saisi)
                 statutHtml = '<span style="font-size:13px;color:#c8833a;font-weight:500;">⚠️ Non saisi</span>';
