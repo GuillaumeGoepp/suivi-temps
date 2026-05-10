@@ -726,7 +726,7 @@ function toggleValidationModal() {
   const note = document.getElementById('modal-note-admin').value.trim();
   sauverNote(_paieCurrentCollab, note);
   toggleValidation(_paieCurrentCollab);
-  document.getElementById('modal-saisies').classList.remove('open');
+  retourPaie();
 }
 
 function fermerModal(id) {
@@ -882,7 +882,10 @@ async function sauverNote(collabId, note) {
 function retourPaie() {
   document.getElementById('paie-detail').style.display = 'none';
   document.getElementById('paie-card').style.display = 'block';
+  document.getElementById('paie-indicateur').style.display = 'block';
+  document.querySelector('#vue-paie .card:first-child').style.display = 'block';
   _paieCurrentCollab = null;
+  chargerPaie(paieCurrentPeriode);
 }
 
 async function ouvrirSaisiesPaie(collabId, btn) {
@@ -908,6 +911,8 @@ async function ouvrirSaisiesPaie(collabId, btn) {
   // Afficher vue détail
   document.getElementById('paie-detail-titre').textContent = 'Détail — ' + nomAffiche;
   document.getElementById('paie-card').style.display = 'none';
+  document.getElementById('paie-indicateur').style.display = 'none';
+  document.querySelector('#vue-paie .card:first-child').style.display = 'none';
   document.getElementById('paie-detail').style.display = 'block';
   document.getElementById('table-saisies-paie').innerHTML = '<div class="loader"><div class="spinner"></div>Chargement…</div>';
   document.getElementById('filtres-paie').innerHTML = '';
