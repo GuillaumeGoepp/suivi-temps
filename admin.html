@@ -163,6 +163,7 @@ th.sort-desc::after { content: ' ↓'; opacity: 1; color: var(--bleu); }
     <div class="tab active" onclick="showTab('collabs', this)">👥 Collaborateurs</div>
     <div class="tab" onclick="showTab('periodes', this)">📅 Périodes</div>
     <div class="tab" onclick="showTab('recap', this)">📊 Récap</div>
+    <div class="tab" onclick="showTab('paie', this)">💶 Paie</div>
   </div>
   <div class="main">
     <div class="vue active" id="vue-collabs">
@@ -243,6 +244,49 @@ th.sort-desc::after { content: ' ↓'; opacity: 1; color: var(--bleu); }
           </table>
         </div>
       </div>
+    <!-- TAB PAIE -->
+    <div class="vue" id="vue-paie">
+      <div class="card" style="margin-bottom:20px">
+        <div class="card-header">
+          <span class="card-title" id="paie-titre">Gestion de la paie</span>
+          <select id="paie-periode-select" onchange="chargerPaie(this.value)" style="font-size:13px;padding:6px 10px;border-radius:8px;border:1.5px solid #dce6f0;">
+            <option value="">— Sélectionner une période clôturée —</option>
+          </select>
+        </div>
+        <div class="card-body" id="paie-indicateur" style="display:none">
+          <div id="paie-statut-global" style="padding:12px 16px;border-radius:10px;font-size:14px;font-weight:500"></div>
+        </div>
+      </div>
+      <div class="card" id="paie-card" style="display:none">
+        <div class="card-header">
+          <span class="card-title">Récapitulatif par collaborateur</span>
+          <button class="btn btn-primary btn-sm" id="btn-init-paie" onclick="initPaie()">🔄 Initialiser / Recalculer</button>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Collaborateur</th>
+                <th>Structure</th>
+                <th>Contrat</th>
+                <th>H/sem</th>
+                <th>Heures</th>
+                <th>Jours trav.</th>
+                <th>CP</th>
+                <th>AT</th>
+                <th>Validation</th>
+                <th>Note admin</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="paie-tbody">
+              <tr><td colspan="11" style="text-align:center;color:var(--texte3);padding:32px">Sélectionnez une période clôturée puis cliquez sur Initialiser</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
     </div>
   </div>
 </div>
@@ -278,6 +322,49 @@ th.sort-desc::after { content: ' ↓'; opacity: 1; color: var(--bleu); }
     <div class="modal-footer">
       <button class="btn btn-secondary" onclick="fermerModal()">Annuler</button>
       <button class="btn btn-primary" id="btn-sauver" onclick="sauverCollab()">Enregistrer</button>
+    <!-- TAB PAIE -->
+    <div class="vue" id="vue-paie">
+      <div class="card" style="margin-bottom:20px">
+        <div class="card-header">
+          <span class="card-title" id="paie-titre">Gestion de la paie</span>
+          <select id="paie-periode-select" onchange="chargerPaie(this.value)" style="font-size:13px;padding:6px 10px;border-radius:8px;border:1.5px solid #dce6f0;">
+            <option value="">— Sélectionner une période clôturée —</option>
+          </select>
+        </div>
+        <div class="card-body" id="paie-indicateur" style="display:none">
+          <div id="paie-statut-global" style="padding:12px 16px;border-radius:10px;font-size:14px;font-weight:500"></div>
+        </div>
+      </div>
+      <div class="card" id="paie-card" style="display:none">
+        <div class="card-header">
+          <span class="card-title">Récapitulatif par collaborateur</span>
+          <button class="btn btn-primary btn-sm" id="btn-init-paie" onclick="initPaie()">🔄 Initialiser / Recalculer</button>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Collaborateur</th>
+                <th>Structure</th>
+                <th>Contrat</th>
+                <th>H/sem</th>
+                <th>Heures</th>
+                <th>Jours trav.</th>
+                <th>CP</th>
+                <th>AT</th>
+                <th>Validation</th>
+                <th>Note admin</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="paie-tbody">
+              <tr><td colspan="11" style="text-align:center;color:var(--texte3);padding:32px">Sélectionnez une période clôturée puis cliquez sur Initialiser</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
     </div>
   </div>
 </div>
@@ -412,6 +499,7 @@ function showTab(nom, el) {
   document.getElementById('vue-' + nom).classList.add('active');
   el.classList.add('active');
   if (nom === 'recap') chargerRecap();
+  if (nom === 'paie' && !document.getElementById('paie-periode-select').options.length > 1) chargerPeriodes();
 }
 
 async function chargerEquipes() {
@@ -639,6 +727,199 @@ async function toggleCollab(collabId, btn) {
   btn.disabled = false;
 }
 
+// ── PAIE ─────────────────────────────────────────────────────────────────────
+let paieCurrentPeriode = '';
+
+async function chargerPaie(periodeId) {
+  paieCurrentPeriode = periodeId || '';
+  const card = document.getElementById('paie-card');
+  const indic = document.getElementById('paie-indicateur');
+  if (!periodeId) { card.style.display='none'; indic.style.display='none'; return; }
+  card.style.display='block'; indic.style.display='block';
+  document.getElementById('paie-titre').textContent = 'Paie — chargement…';
+  document.getElementById('paie-tbody').innerHTML = '<tr><td colspan="11"><div class="loader"><div class="spinner"></div>Chargement…</div></td></tr>';
+  try {
+    const d = await jsonpFetch(API_URL + '?action=bo_getRecapPaie&token=' + encodeURIComponent(ADMIN_TOKEN) + '&periodeId=' + encodeURIComponent(periodeId));
+    if (!d.ok) { document.getElementById('paie-tbody').innerHTML = '<tr><td colspan="11" style="text-align:center;color:var(--texte3);padding:32px">Pas encore initialisé — cliquez sur Initialiser / Recalculer</td></tr>'; return; }
+    renderPaie(d.recap, periodeId);
+  } catch(e) { document.getElementById('paie-tbody').innerHTML = '<tr><td colspan="11" style="color:var(--rouge);padding:24px">Erreur réseau.</td></tr>'; }
+}
+
+async function initPaie() {
+  if (!paieCurrentPeriode) return;
+  const btn = document.getElementById('btn-init-paie');
+  btn.disabled = true; btn.textContent = '⏳ Calcul…';
+  try {
+    const d = await jsonpFetch(API_URL + '?action=bo_initRecapPaie&token=' + encodeURIComponent(ADMIN_TOKEN) + '&periodeId=' + encodeURIComponent(paieCurrentPeriode));
+    if (d.ok) { chargerPaie(paieCurrentPeriode); }
+    else alert('Erreur : ' + (d.error||'inconnue'));
+  } catch(e) { alert('Erreur réseau'); }
+  btn.disabled = false; btn.textContent = '🔄 Initialiser / Recalculer';
+}
+
+function renderPaie(recap, periodeId) {
+  const nbTotal = recap.length;
+  const nbValides = recap.filter(r => r.statut_validation === 'valide').length;
+  const nbAttente = nbTotal - nbValides;
+  const statut = document.getElementById('paie-statut-global');
+  if (nbAttente === 0) {
+    statut.style.background = 'var(--vert-pale)';
+    statut.style.color = 'var(--vert)';
+    statut.textContent = '🟢 Tous les collaborateurs sont validés — virement possible';
+  } else {
+    statut.style.background = 'var(--orange-pale)';
+    statut.style.color = 'var(--orange)';
+    statut.textContent = '🔴 ' + nbAttente + ' collaborateur' + (nbAttente>1?'s':'') + ' en attente de validation';
+  }
+  // Récupérer le nom de la période
+  const sel = document.getElementById('paie-periode-select');
+  const opt = sel.querySelector('option[value="'+periodeId+'"]');
+  document.getElementById('paie-titre').textContent = 'Paie — ' + (opt ? opt.textContent : periodeId);
+
+  const sorted = [...recap].sort((a,b) => {
+    if (a.statut_validation==='en_attente' && b.statut_validation!=='en_attente') return -1;
+    if (a.statut_validation!=='en_attente' && b.statut_validation==='en_attente') return 1;
+    return (a.nom_affiche||'').localeCompare(b.nom_affiche||'');
+  });
+
+  document.getElementById('paie-tbody').innerHTML = sorted.map(r => {
+    const valide = r.statut_validation === 'valide';
+    const collabEnc = encodeURIComponent(r.collab_id);
+    return `<tr style="${valide?'background:var(--vert-pale)':''}">
+      <td><strong>${r.nom_affiche||'—'}</strong></td>
+      <td>${r.structure||'—'}</td>
+      <td>${r.type_contrat||'—'}</td>
+      <td>${r.heures_hebdo?r.heures_hebdo+'h':'—'}</td>
+      <td><span style="font-family:monospace;font-weight:600">${Number(r.total_heures||0).toFixed(2)}h</span></td>
+      <td>${r.nb_jours_travailles||0}</td>
+      <td>${r.nb_cp||0}</td>
+      <td>${r.nb_at||0}</td>
+      <td>
+        <button class="btn btn-sm ${valide?'btn-success':'btn-secondary'}" onclick="toggleValidation('${collabEnc}')">
+          ${valide?'✅ Validé':'⬜ Valider'}
+        </button>
+      </td>
+      <td>
+        <input type="text" value="${(r.note_admin||'').replace(/"/g,'&quot;')}" placeholder="Note…"
+          style="width:130px;font-size:12px;padding:4px 8px"
+          onblur="sauverNote('${collabEnc}', this.value)">
+      </td>
+      <td>
+        <button class="btn btn-warning btn-sm" onclick="ouvrirSaisiesPaie('${collabEnc}', this)">📋 Détail</button>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+async function toggleValidation(collabId) {
+  try {
+    const d = await jsonpFetch(API_URL + '?action=bo_validerCollab&token=' + encodeURIComponent(ADMIN_TOKEN)
+      + '&periodeId=' + encodeURIComponent(paieCurrentPeriode)
+      + '&collabId=' + encodeURIComponent(collabId));
+    if (d.ok) chargerPaie(paieCurrentPeriode);
+    else alert('Erreur : ' + (d.error||'inconnue'));
+  } catch(e) { alert('Erreur réseau'); }
+}
+
+async function sauverNote(collabId, note) {
+  try {
+    await jsonpFetch(API_URL + '?action=bo_saveNoteAdmin&token=' + encodeURIComponent(ADMIN_TOKEN)
+      + '&periodeId=' + encodeURIComponent(paieCurrentPeriode)
+      + '&collabId=' + encodeURIComponent(collabId)
+      + '&note=' + encodeURIComponent(note));
+  } catch(e) {}
+}
+
+async function ouvrirSaisiesPaie(collabId, btn) {
+  const nomAffiche = btn.closest('tr').querySelector('td strong').textContent;
+  document.getElementById('saisies-titre').textContent = 'Détail — ' + nomAffiche;
+  document.getElementById('saisies-body').innerHTML = '<div class="loader"><div class="spinner"></div>Chargement…</div>';
+  document.getElementById('modal-saisies').classList.add('open');
+  try {
+    const url = API_URL + '?action=bo_getJoursCollab&token=' + encodeURIComponent(ADMIN_TOKEN)
+      + '&collabId=' + encodeURIComponent(collabId)
+      + '&periodeId=' + encodeURIComponent(paieCurrentPeriode);
+    const d = await jsonpFetch(url);
+    if (!d.ok) { document.getElementById('saisies-body').innerHTML = '<div class="error-banner">Erreur.</div>'; return; }
+    renderSaisiesPaie(d.jours || [], collabId);
+  } catch(e) { document.getElementById('saisies-body').innerHTML = '<div class="error-banner">Erreur réseau.</div>'; }
+}
+
+function renderSaisiesPaie(jours, collabId) {
+  const body = document.getElementById('saisies-body');
+  if (!jours.length) { body.innerHTML = '<div style="text-align:center;color:var(--texte3);padding:40px">Aucune saisie.</div>'; return; }
+  const typeLabel = t => ({travaille:'Travaillé',conge:'Congé',absence:'Absence',ferie:'Férié',travaillée:'Travaillé',CP:'CP',AT:'AT'}[t]||t||'—');
+  const typeBadge = t => {
+    const cls = (t==='travaille'||t==='travaillée')?'badge-actif':t==='CP'?'badge-attente':t==='AT'?'badge-inactif':'badge-inactif';
+    return '<span class="badge '+cls+'">'+typeLabel(t)+'</span>';
+  };
+  const th = s => '<th style="text-align:left;padding:8px 10px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--texte3);border-bottom:1px solid #e8f0f8;background:#fafcff;white-space:nowrap">'+s+'</th>';
+  const td = (c,x) => '<td style="padding:8px 10px;border-bottom:1px solid #f0f4f8;'+(x||'')+'">'+c+'</td>';
+
+  // Filtre actif
+  let filtrePaie = 'tous';
+  const filtreId = 'filtre-paie-'+Date.now();
+
+  body.innerHTML = '<div style="display:flex;gap:6px;margin-bottom:14px" id="'+filtreId+'">'
+    + ['tous','travaillée','CP','AT'].map(v =>
+        '<button class="filter-btn'+(v==='tous'?' active':'')+'" onclick="filtrerSaisiesPaie(''+v+'',''+filtreId+'')" data-filtre="'+v+'">'+
+        (v==='tous'?'Tous':v)+'</button>').join('')
+    + '</div>'
+    + '<div id="table-saisies-paie">'
+    + buildTableSaisies(jours, 'tous', collabId)
+    + '</div>';
+
+  // Stocker les jours pour le filtre
+  window._jours_paie_current = jours;
+  window._collab_paie_current = collabId;
+}
+
+function filtrerSaisiesPaie(filtre, filtreId) {
+  document.querySelectorAll('#'+filtreId+' .filter-btn').forEach(b => b.classList.remove('active'));
+  document.querySelector('#'+filtreId+' [data-filtre="'+filtre+'"]').classList.add('active');
+  document.getElementById('table-saisies-paie').innerHTML = buildTableSaisies(window._jours_paie_current, filtre, window._collab_paie_current);
+}
+
+function buildTableSaisies(jours, filtre, collabId) {
+  const filtered = filtre==='tous' ? jours : jours.filter(j => j.typeJour===filtre);
+  if (!filtered.length) return '<div style="text-align:center;color:var(--texte3);padding:24px">Aucun jour pour ce filtre.</div>';
+  const typeLabel = t => ({travaille:'Travaillé',travaillée:'Travaillé',CP:'CP',AT:'AT'}[t]||t||'—');
+  const typeBadge = t => {
+    const cls = (t==='travaille'||t==='travaillée')?'badge-actif':t==='CP'?'badge-attente':'badge-inactif';
+    return '<span class="badge '+cls+'">'+typeLabel(t)+'</span>';
+  };
+  const th = s => '<th style="text-align:left;padding:8px 10px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--texte3);border-bottom:1px solid #e8f0f8;background:#fafcff;white-space:nowrap">'+s+'</th>';
+  const td = (c,x) => '<td style="padding:8px 10px;border-bottom:1px solid #f0f4f8;'+(x||'')+'">'+c+'</td>';
+  return '<table style="width:100%;border-collapse:collapse;font-size:13px"><thead><tr>'
+    + th('Date')+th('Jour')+th('Type')+th('Matin')+th('Après-midi')+th('Créneau 3')+th('Total')+th('Commentaire')+th('Remarque')
+    + '</tr></thead><tbody>'
+    + filtered.map((j,idx) => {
+        const jourId = (j.jourId||'').replace(/'/g,'');
+        const c1 = fmtHeure(j.c1Debut)&&fmtHeure(j.c1Fin)?fmtHeure(j.c1Debut)+' → '+fmtHeure(j.c1Fin):'—';
+        const c2 = fmtHeure(j.c2Debut)&&fmtHeure(j.c2Fin)?fmtHeure(j.c2Debut)+' → '+fmtHeure(j.c2Fin):'—';
+        const c3 = fmtHeure(j.c3Debut)&&fmtHeure(j.c3Fin)?fmtHeure(j.c3Debut)+' → '+fmtHeure(j.c3Fin):'—';
+        const hasRem = j.remarqueManager&&j.remarqueManager.trim();
+        const remVal = (j.remarqueManager||'').replace(/"/g,'&quot;');
+        return '<tr>'
+          + td('<strong>'+(j.dateJour||'—')+'</strong>','white-space:nowrap')
+          + td(j.jourSemaine||'—')
+          + td(typeBadge(j.typeJour))
+          + td('<span style="font-family:monospace;font-size:12px">'+c1+'</span>','white-space:nowrap')
+          + td('<span style="font-family:monospace;font-size:12px">'+c2+'</span>','white-space:nowrap')
+          + td('<span style="font-family:monospace;font-size:12px">'+c3+'</span>','white-space:nowrap')
+          + td('<span style="font-family:monospace;font-weight:600;color:var(--bleu)">'+(j.totalHeures!=null&&j.totalHeures!==''?Number(j.totalHeures).toFixed(2)+'h':'—')+'</span>')
+          + td('<span style="font-size:12px;color:var(--texte2)">'+(j.commentaire||'—').replace(/</g,'&lt;')+'</span>')
+          + '<td style="padding:6px 10px;border-bottom:1px solid #f0f4f8">'
+          + '<div style="display:flex;align-items:center;gap:6px">'
+          + '<input type="text" id="jp'+idx+'-rem" value="'+remVal+'" placeholder="Remarque…" style="flex:1;min-width:140px;font-size:12px;padding:4px 8px;'+(hasRem?'border-color:var(--orange);background:var(--orange-pale)':'')+'">'
+          + '<button class="btn btn-warning btn-sm" onclick="sauverRemarque('+idx+',''+jourId+'')">Enregistrer</button>'
+          + '</div>'
+          + '<div class="save-msg" id="jmsg-'+idx+'"></div>'
+          + '</td></tr>';
+      }).join('')
+    + '</tbody></table>';
+}
+
 function fermerModalSaisies() {
   document.getElementById('modal-saisies').classList.remove('open');
 }
@@ -858,6 +1139,15 @@ async function chargerPeriodes() {
       sel.appendChild(o);
     });
     verifierAlertePeriodes(d.periodes);
+    // Alimenter le select Paie avec les périodes clôturées
+    const selPaie = document.getElementById('paie-periode-select');
+    selPaie.innerHTML = '<option value="">— Sélectionner une période clôturée —</option>';
+    d.periodes.filter(p => p.statut === 'cloturee').forEach(p => {
+      const o = document.createElement('option');
+      o.value = p.periodeId;
+      o.textContent = p.nomPeriode;
+      selPaie.appendChild(o);
+    });
     const tbody = document.getElementById('periodes-tbody');
     if (!d.periodes.length) { tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--texte3);padding:32px">Aucune période</td></tr>'; return; }
     tbody.innerHTML = d.periodes.map(p => {
