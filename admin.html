@@ -856,27 +856,22 @@ function renderSaisiesPaie(jours, collabId) {
   const th = s => '<th style="text-align:left;padding:8px 10px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--texte3);border-bottom:1px solid #e8f0f8;background:#fafcff;white-space:nowrap">'+s+'</th>';
   const td = (c,x) => '<td style="padding:8px 10px;border-bottom:1px solid #f0f4f8;'+(x||'')+'">'+c+'</td>';
 
-  // Filtre actif
-  let filtrePaie = 'tous';
-  const filtreId = 'filtre-paie-'+Date.now();
+  window._jours_paie_current = jours;
+  window._collab_paie_current = collabId;
 
-  body.innerHTML = '<div style="display:flex;gap:6px;margin-bottom:14px" id="'+filtreId+'">'
+  body.innerHTML = '<div style="display:flex;gap:6px;margin-bottom:14px" id="filtres-paie">'
     + ['tous','travaillée','CP','AT'].map(v =>
-        '<button class="filter-btn'+(v==='tous'?' active':'')+'" onclick="filtrerSaisiesPaie(\''+v+'\')" data-filtre="'+v+'">'+
+        '<button class="filter-btn'+(v==='tous'?' active':'')+'" onclick="filtrerSaisiesPaie(this,\''+v+'\')" data-filtre="'+v+'">'+
         (v==='tous'?'Tous':v)+'</button>').join('')
     + '</div>'
     + '<div id="table-saisies-paie">'
     + buildTableSaisies(jours, 'tous', collabId)
     + '</div>';
-
-  // Stocker les jours pour le filtre
-  window._jours_paie_current = jours;
-  window._collab_paie_current = collabId;
 }
 
-function filtrerSaisiesPaie(filtre, filtreId) {
-  document.querySelectorAll('#'+filtreId+' .filter-btn').forEach(b => b.classList.remove('active'));
-  document.querySelector('#'+filtreId+' [data-filtre="'+filtre+'"]').classList.add('active');
+function filtrerSaisiesPaie(btn, filtre) {
+  document.querySelectorAll('#filtres-paie .filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
   document.getElementById('table-saisies-paie').innerHTML = buildTableSaisies(window._jours_paie_current, filtre, window._collab_paie_current);
 }
 
