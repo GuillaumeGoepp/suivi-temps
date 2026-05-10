@@ -907,7 +907,7 @@ function buildTableSaisies(jours, filtre, collabId) {
           + '<td style="padding:6px 10px;border-bottom:1px solid #f0f4f8">'
           + '<div style="display:flex;align-items:center;gap:6px">'
           + '<input type="text" id="jp'+idx+'-rem" value="'+remVal+'" placeholder="Remarque…" style="flex:1;min-width:140px;font-size:12px;padding:4px 8px;'+(hasRem?'border-color:var(--orange);background:var(--orange-pale)':'')+'">'
-          + '<button class="btn btn-warning btn-sm" onclick="sauverRemarque('+idx+',''+jourId+'')">Enregistrer</button>'
+          + '<button class="btn btn-warning btn-sm" onclick="sauverRemarque('+idx+',\''+jourId+'\')">Enregistrer</button>'
           + '</div>'
           + '<div class="save-msg" id="jmsg-'+idx+'"></div>'
           + '</td></tr>';
