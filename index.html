@@ -1012,8 +1012,9 @@
         };
         let html = '<div class="block"><div class="block-label">' + (periode || 'Période en cours') + '</div>';
         for (const j of passes) {
-            const d = new Date(j.date + 'T12:00:00'),
-                djour = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+            const p2=(j.dateJour||'').split('/');
+            const d = p2.length===3 ? new Date(p2[2],p2[1]-1,p2[0]) : new Date(j.dateJour);
+            const djour = new Date(d.getFullYear(), d.getMonth(), d.getDate());
             const isToday = djour.getTime() === today.getTime(),
                 joursDepuis = Math.round((today - djour) / 86400000),
                 modifiable = joursDepuis <= 5;
