@@ -267,6 +267,7 @@ th.sort-desc::after { content: ' ↓'; opacity: 1; color: var(--bleu); }
               <span class="card-title" id="paie-detail-titre"></span>
             </div>
             <div style="display:flex;align-items:center;gap:10px">
+              <span id="badge-validation-paie" style="font-size:13px"></span>
               <input type="text" id="modal-note-admin" placeholder="Note admin…" style="width:220px;font-size:13px;padding:6px 10px">
               <button class="btn btn-success btn-sm" id="btn-valider-collab" onclick="toggleValidationModal()">⬜ Valider</button>
             </div>
@@ -366,6 +367,7 @@ th.sort-desc::after { content: ' ↓'; opacity: 1; color: var(--bleu); }
               <span class="card-title" id="paie-detail-titre"></span>
             </div>
             <div style="display:flex;align-items:center;gap:10px">
+              <span id="badge-validation-paie" style="font-size:13px"></span>
               <input type="text" id="modal-note-admin" placeholder="Note admin…" style="width:220px;font-size:13px;padding:6px 10px">
               <button class="btn btn-success btn-sm" id="btn-valider-collab" onclick="toggleValidationModal()">⬜ Valider</button>
             </div>
@@ -894,8 +896,14 @@ async function ouvrirSaisiesPaie(collabId, btn) {
   if (noteEl) noteEl.value = ligne ? (ligne.note_admin||'') : '';
   if (btnVal) {
     const valide = ligne && ligne.statut_validation==='valide';
-    btnVal.textContent = valide ? '↩ Dévalider' : '✅ Valider';
-    btnVal.className = valide ? 'btn btn-danger btn-sm' : 'btn btn-success btn-sm';
+    btnVal.textContent = '✅ Valider';
+    btnVal.className = 'btn btn-success btn-sm';
+    const badge = document.getElementById('badge-validation-paie');
+    if (badge) {
+      badge.innerHTML = valide
+        ? '<span class="badge badge-actif">✅ Validé</span> <a href="#" onclick="toggleValidationModal();return false;" style="font-size:12px;color:var(--texte3);margin-left:4px">↩ dévalider</a>'
+        : '<span class="badge badge-attente">⏳ En attente</span>';
+    }
   }
   // Afficher vue détail
   document.getElementById('paie-detail-titre').textContent = 'Détail — ' + nomAffiche;
