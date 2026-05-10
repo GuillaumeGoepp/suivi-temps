@@ -499,7 +499,7 @@ function showTab(nom, el) {
   document.getElementById('vue-' + nom).classList.add('active');
   el.classList.add('active');
   if (nom === 'recap') chargerRecap();
-  if (nom === 'paie' && !document.getElementById('paie-periode-select').options.length > 1) chargerPeriodes();
+  if (nom === 'paie') chargerPeriodes();
 }
 
 async function chargerEquipes() {
