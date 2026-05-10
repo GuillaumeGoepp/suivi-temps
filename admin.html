@@ -73,7 +73,7 @@ label { font-size: 12px; font-weight: 600; color: var(--texte2); text-transform:
 input, select { padding: 9px 12px; border: 1.5px solid #dce6f0; border-radius: 8px; font-family: 'DM Sans', sans-serif; font-size: 14px; color: var(--texte); background: white; outline: none; transition: border-color .15s; }
 input:focus, select:focus, textarea:focus { border-color: var(--bleu-clair); }
 textarea { resize: vertical; min-height: 72px; }
-.modal-lg { width: min(1400px, 96vw); min-width: 600px; min-height: 300px; resize: both; overflow: auto; }
+.modal-lg { width: 96vw; max-height: 92vh; display: flex; flex-direction: column; }
 .modal-body { max-height: 72vh; overflow-y: auto; }
 .jour-row { border: 1px solid #e8f0f8; border-radius: 10px; padding: 14px 16px; margin-bottom: 10px; transition: opacity .2s; }
 .jour-row.saving { opacity: .5; pointer-events: none; }
@@ -374,7 +374,7 @@ th.sort-desc::after { content: ' ↓'; opacity: 1; color: var(--bleu); }
   <div class="modal modal-lg">
     <div class="modal-header">
       <span class="modal-title" id="saisies-titre">Saisies</span>
-      <button class="modal-close" onclick="fermerModalSaisies()">×</button>
+      <button class="modal-close" onclick="fermerModal('modal-saisies')">×</button>
     </div>
     <div class="modal-body" id="saisies-body">
       <div class="loader"><div class="spinner"></div>Chargement…</div>
@@ -384,7 +384,7 @@ th.sort-desc::after { content: ' ↓'; opacity: 1; color: var(--bleu); }
         <input type="text" id="modal-note-admin" placeholder="Note admin…" style="width:220px;font-size:13px;padding:6px 10px">
         <button class="btn btn-success btn-sm" id="btn-valider-collab" onclick="toggleValidationModal()">⬜ Valider</button>
       </div>
-      <button class="btn btn-secondary" onclick="fermerModalSaisies()">Fermer</button>
+      <button class="btn btn-secondary" onclick="fermerModal('modal-saisies')">Fermer</button>
     </div>
   </div>
 </div>
