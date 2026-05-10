@@ -721,12 +721,50 @@ function rendreModalDeplacable(modalEl) {
 
 let _paieCurrentCollab = null;
 
-function toggleValidationModal() {
+async function toggleValidationModal() {
   if (!_paieCurrentCollab) return;
-  const note = document.getElementById('modal-note-admin').value.trim();
-  sauverNote(_paieCurrentCollab, note);
-  toggleValidation(_paieCurrentCollab);
-  retourPaie();
+  const note = (document.getElementById('modal-note-admin')?.value||'').trim();
+  const jours = window._jours_paie_current || [];
+
+  // Sauvegarder tous les jours visibles
+  for (let idx = 0; idx < jours.length; idx++) {
+    const jourId = (jours[idx].jourId||'').replace(/'/g,'');
+    if (!jourId) continue;
+    const get = id => (document.getElementById(id)?.value||'').trim();
+    if (!document.getElementById('jp'+idx+'-type')) continue;
+    const params = {
+      action: 'bo_saveJour',
+      token: ADMIN_TOKEN,
+      jourId,
+      collabId: _paieCurrentCollab,
+      typeJour:    get('jp'+idx+'-type'),
+      c1Debut:     get('jp'+idx+'-c1d'),
+      c1Fin:       get('jp'+idx+'-c1f'),
+      c2Debut:     get('jp'+idx+'-c2d'),
+      c2Fin:       get('jp'+idx+'-c2f'),
+      c3Debut:     get('jp'+idx+'-c3d'),
+      c3Fin:       get('jp'+idx+'-c3f'),
+      commentaire: get('jp'+idx+'-comm'),
+    };
+    try {
+      await jsonpFetch(API_URL + '?' + Object.entries(params).map(([k,v]) => k+'='+encodeURIComponent(v)).join('&'));
+    } catch(e) { console.warn('Erreur saveJour idx '+idx, e); }
+  }
+
+  // Valider avec recalcul + note
+  try {
+    const d = await jsonpFetch(API_URL
+      + '?action=bo_validerCollab&token=' + encodeURIComponent(ADMIN_TOKEN)
+      + '&periodeId=' + encodeURIComponent(paieCurrentPeriode)
+      + '&collabId=' + encodeURIComponent(_paieCurrentCollab)
+      + '&note=' + encodeURIComponent(note));
+    if (d.ok) {
+      chargerPaie(paieCurrentPeriode);
+      retourPaie();
+    } else {
+      alert('Erreur validation : ' + (d.error||'inconnue'));
+    }
+  } catch(e) { alert('Erreur réseau'); }
 }
 
 function fermerModal(id) {
