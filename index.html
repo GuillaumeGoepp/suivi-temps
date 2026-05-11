@@ -1018,7 +1018,7 @@
             const djour = new Date(d.getFullYear(), d.getMonth(), d.getDate());
             const isToday = djour.getTime() === today.getTime(),
                 joursDepuis = Math.round((today - djour) / 86400000),
-                modifiable = joursDepuis <= 5;
+                modifiable = joursDepuis <= 5 && (j.nbModifications || 0) < 3;
             const t = j.typeJour || 'travaillée',
                 nonTravaillee = t === 'CP' || t === 'AT';
             const saisi = j.c1Debut !== '' || t === 'CP' || t === 'AT';
