@@ -997,7 +997,8 @@
         const parseDMY = s => { const p=(s||'').split('/'); return p.length===3?p[2]+p[1]+p[0]:''; };
         const sorted = [...jours].filter(j => j.dateJour).sort((a, b) => parseDMY(b.dateJour).localeCompare(parseDMY(a.dateJour)));
         const passes = sorted.filter(j => {
-            const d = new Date(j.date + 'T12:00:00');
+            const p=(j.dateJour||'').split('/');
+            const d = p.length===3 ? new Date(p[2],p[1]-1,p[0]) : new Date(j.dateJour);
             return new Date(d.getFullYear(), d.getMonth(), d.getDate()) <= today;
         }).slice(0, 6);
         const typeIcon = {
