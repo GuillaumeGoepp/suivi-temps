@@ -416,7 +416,7 @@ th.sort-desc::after { content: ' ↓'; opacity: 1; color: var(--bleu); }
       <span class="modal-title" id="saisies-titre">Saisies</span>
       <button class="modal-close" onclick="fermerModal('modal-saisies')">×</button>
     </div>
-    <div class="modal-body" id="saisies-body">
+    <div class="modal-body" id="saisies-body" style="overflow:auto;max-height:60vh;padding:0">
       <div class="loader"><div class="spinner"></div>Chargement…</div>
     </div>
     <div class="modal-footer" style="justify-content:space-between;align-items:center">
