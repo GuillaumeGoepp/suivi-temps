@@ -1212,6 +1212,8 @@ function modifierPeriode(periodeId) {
   document.getElementById('p-nom').value = p.nomPeriode || '';
   document.getElementById('modal-periode-error').style.display = 'none';
   document.getElementById('btn-sauver-periode').dataset.periodeId = periodeId;
+  document.getElementById('btn-sauver-periode').disabled = false;
+  document.getElementById('btn-sauver-periode').textContent = 'Enregistrer';
   document.getElementById('modal-periode').classList.add('open');
 }
 
