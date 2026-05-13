@@ -924,6 +924,38 @@ function retourPaie() {
   chargerPaie(paieCurrentPeriode);
 }
 
+
+function renderSaisies(jours, collabId) {
+  const body = document.getElementById('saisies-body');
+  if (!jours.length) {
+    body.innerHTML = '<div style="text-align:center;color:var(--texte3);padding:40px">Aucune saisie pour cette période.</div>';
+    return;
+  }
+  const typeLabel = t => ({ travaille:'Travaillé', conge:'Congé', absence:'Absence', ferie:'Férié', travaillée:'Travaillé' }[t] || t || '—');
+  const typeBadge = t => {
+    const cls = (t==='travaille'||t==='travaillée')?'badge-actif':t==='conge'?'badge-attente':t==='absence'?'badge-attente':'badge-inactif';
+    return '<span class="badge '+cls+'">'+typeLabel(t)+'</span>';
+  };
+  const th = s => '<th style="text-align:left;padding:8px 10px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--texte3);border-bottom:1px solid #e8f0f8;background:#fafcff;white-space:nowrap">'+s+'</th>';
+  const td = (content, extra) => '<td style="padding:8px 10px;border-bottom:1px solid #f0f4f8;'+(extra||'')+'">'+content+'</td>';
+  body.innerHTML = '<table style="width:100%;border-collapse:collapse;font-size:13px"><thead><tr>'
+    + th('Date') + th('Type') + th('Créneau 1') + th('Créneau 2') + th('Créneau 3') + th('Total') + th('Commentaire')
+    + '</tr></thead><tbody>'
+    + jours.filter(j => (j.totalHeures && Number(j.totalHeures) > 0) || j.typeJour === 'CP' || j.typeJour === 'AT' || j.typeJour === 'conge' || j.typeJour === 'absence').map(j => {
+        const cren = (d, f) => (fmtHeure(d) && fmtHeure(f)) ? fmtHeure(d)+' → '+fmtHeure(f) : '—';
+        return '<tr>'
+          + td('<strong>'+(j.dateJour||'—')+'</strong><div style="font-size:11px;color:var(--texte3)">'+(j.jourSemaine||'')+'</div>', 'white-space:nowrap')
+          + td(typeBadge(j.typeJour))
+          + td(cren(j.c1Debut,j.c1Fin), 'font-family:monospace;font-size:12px;white-space:nowrap')
+          + td(cren(j.c2Debut,j.c2Fin), 'font-family:monospace;font-size:12px;white-space:nowrap')
+          + td(cren(j.c3Debut,j.c3Fin), 'font-family:monospace;font-size:12px;white-space:nowrap')
+          + td('<span style="font-family:monospace;font-weight:600;color:var(--bleu)">'+(j.totalHeures!=null&&j.totalHeures!==''?Number(j.totalHeures).toFixed(2)+'h':'—')+'</span>')
+          + td('<span style="font-size:12px;color:var(--texte2)">'+(j.commentaire||'—').replace(/</g,'&lt;')+'</span>')
+          + '</tr>';
+      }).join('')
+    + '</tbody></table>';
+}
+
 async function ouvrirSaisies(collabId, btn) {
   const nomAffiche = btn.closest('tr').querySelector('td strong').textContent;
   document.getElementById('saisies-titre').textContent = 'Saisies — ' + nomAffiche;
