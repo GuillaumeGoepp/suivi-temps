@@ -59,7 +59,7 @@ function getJourDuJour(token) {
 }
 function getMesJours(token, periodeId) {
   const collab = checkCollab(token); if (!collab) return {ok:false, error:'Token invalide'};
-  return {ok:true, jours:sheetToObjects(SHEETS.jours()).filter(j=>String(j.collab_id)===String(collab.collab_id)&&(!periodeId||String(j.periode_id)===String(periodeId))).map(j=>({jourId:j.jour_id,dateJour:fmtDate(j.date_jour),jourSemaine:j.jour_semaine,typeJour:j.type_jour,c1Debut:fmtHeure(j.c1_debut),c1Fin:fmtHeure(j.c1_fin),c2Debut:fmtHeure(j.c2_debut),c2Fin:fmtHeure(j.c2_fin),c3Debut:fmtHeure(j.c3_debut),c3Fin:fmtHeure(j.c3_fin),commentaire:j.commentaire,totalHeures:j.total_heures}))};
+  return {ok:true, jours:sheetToObjects(SHEETS.jours()).filter(j=>String(j.collab_id)===String(collab.collab_id)&&(!periodeId||String(j.periode_id)===String(periodeId))).map(j=>({jourId:j.jour_id,dateJour:fmtDate(j.date_jour),jourSemaine:j.jour_semaine,typeJour:j.type_jour,c1Debut:fmtHeure(j.c1_debut),c1Fin:fmtHeure(j.c1_fin),c2Debut:fmtHeure(j.c2_debut),c2Fin:fmtHeure(j.c2_fin),c3Debut:fmtHeure(j.c3_debut),c3Fin:fmtHeure(j.c3_fin),commentaire:j.commentaire,totalHeures:j.total_heures,totalHebdoProg:j.total_hebdo_prog}))};
 }
 function getJourById(token, jourId) {
   const collab = checkCollab(token); if (!collab) return {ok:false, error:'Token invalide'};
@@ -183,7 +183,7 @@ function bo_getJoursCollab(token,collabId,periodeId){
   const isAdmin=checkAdmin(token),manager=checkManager(token);
   if(!isAdmin&&!manager)return{ok:false,error:'Acces refuse'};
   if(manager){const c=sheetToObjects(SHEETS.collabs()).find(c=>String(c.collab_id)===String(collabId));if(!c||String(c.equipe_id)!==String(manager.equipe_id))return{ok:false,error:'Collab hors equipe'};}
-  const jours=sheetToObjects(SHEETS.jours()).filter(j=>String(j.collab_id)===String(collabId)&&(!periodeId||String(j.periode_id)===String(periodeId))).sort((a,b)=>new Date(a.date_jour)-new Date(b.date_jour)).map(j=>({jourId:j.jour_id,dateJour:fmtDate(j.date_jour),jourSemaine:j.jour_semaine,typeJour:j.type_jour,c1Debut:fmtHeure(j.c1_debut),c1Fin:fmtHeure(j.c1_fin),c2Debut:fmtHeure(j.c2_debut),c2Fin:fmtHeure(j.c2_fin),c3Debut:fmtHeure(j.c3_debut),c3Fin:fmtHeure(j.c3_fin),commentaire:j.commentaire,totalHeures:j.total_heures,remarqueManager:j.remarque_manager||'',dateDerniereModif:j.date_derniere_modif||'',nbModifications:j.nb_modifications||0}));
+  const jours=sheetToObjects(SHEETS.jours()).filter(j=>String(j.collab_id)===String(collabId)&&(!periodeId||String(j.periode_id)===String(periodeId))).sort((a,b)=>new Date(a.date_jour)-new Date(b.date_jour)).map(j=>({jourId:j.jour_id,dateJour:fmtDate(j.date_jour),jourSemaine:j.jour_semaine,typeJour:j.type_jour,c1Debut:fmtHeure(j.c1_debut),c1Fin:fmtHeure(j.c1_fin),c2Debut:fmtHeure(j.c2_debut),c2Fin:fmtHeure(j.c2_fin),c3Debut:fmtHeure(j.c3_debut),c3Fin:fmtHeure(j.c3_fin),commentaire:j.commentaire,totalHeures:j.total_heures,totalHebdoProg:j.total_hebdo_prog,remarqueManager:j.remarque_manager||'',dateDerniereModif:j.date_derniere_modif||'',nbModifications:j.nb_modifications||0}));
   const collab=sheetToObjects(SHEETS.collabs()).find(c=>String(c.collab_id)===String(collabId));
   return{ok:true,jours,collab:collab?{nomAffiche:collab.nom_affiche||(collab.prenom+' '+collab.nom),structure:collab.structure,typeContrat:collab.type_contrat,heuresHebdo:collab.heures_hebdo}:null};
 }

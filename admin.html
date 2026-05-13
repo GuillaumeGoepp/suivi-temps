@@ -926,6 +926,27 @@ function retourPaie() {
 }
 
 
+function grouperParSemaine(jours) {
+  const semaines = {};
+  jours.forEach(j => {
+    const s = j.dateJour || '';
+    let d;
+    if (s.includes('/')) { const [dd,mm,yy] = s.split('/'); d = new Date(yy, mm-1, dd); }
+    else d = new Date(s);
+    if (isNaN(d)) return;
+    const jourSem = d.getDay() === 0 ? 6 : d.getDay() - 1;
+    const lundi = new Date(d); lundi.setDate(d.getDate() - jourSem);
+    const key = lundi.toISOString().split('T')[0];
+    if (!semaines[key]) {
+      const dim = new Date(lundi); dim.setDate(lundi.getDate() + 6);
+      const fmt = dt => String(dt.getDate()).padStart(2,'0') + '/' + String(dt.getMonth()+1).padStart(2,'0');
+      semaines[key] = { lundi: key, label: 'Semaine du ' + fmt(lundi) + ' au ' + fmt(dim), jours: [] };
+    }
+    semaines[key].jours.push(j);
+  });
+  return Object.values(semaines).sort((a,b) => a.lundi.localeCompare(b.lundi));
+}
+
 function renderSaisies(jours, collabId) {
   const body = document.getElementById('saisies-body');
   if (!jours.length) {
@@ -939,22 +960,38 @@ function renderSaisies(jours, collabId) {
   };
   const th = s => '<th style="text-align:left;padding:8px 10px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--texte3);border-bottom:1px solid #e8f0f8;background:#fafcff;white-space:nowrap">'+s+'</th>';
   const td = (content, extra) => '<td style="padding:8px 10px;border-bottom:1px solid #f0f4f8;'+(extra||'')+'">'+content+'</td>';
+
+  const semaines = grouperParSemaine(jours);
+  let rows = '';
+
+  semaines.forEach(sem => {
+    // Ligne séparatrice semaine
+    const totalSem = sem.jours.reduce((s,j) => s + (Number(j.totalHeures)||0), 0);
+    rows += '<tr style="background:var(--bleu-pale,#e8f0f8)">'
+      + '<td colspan="6" style="padding:6px 10px;font-size:12px;font-weight:600;color:var(--bleu)">'
+      + sem.label + '</td>'
+      + '<td style="padding:6px 10px;font-size:12px;font-weight:700;color:var(--bleu);font-family:monospace;text-align:right">'
+      + totalSem.toFixed(2) + 'h</td>'
+      + '</tr>';
+
+    sem.jours.forEach(j => {
+      const cren = (d, f) => (fmtHeure(d) && fmtHeure(f)) ? fmtHeure(d)+' → '+fmtHeure(f) : '—';
+      const prog = j.totalHebdoProg != null && j.totalHebdoProg !== '' ? Number(j.totalHebdoProg).toFixed(2)+'h' : '—';
+      rows += '<tr>'
+        + td('<strong>'+(j.dateJour||'—')+'</strong><div style="font-size:11px;color:var(--texte3)">'+(j.jourSemaine||'')+'</div>', 'white-space:nowrap')
+        + td(typeBadge(j.typeJour))
+        + td(cren(j.c1Debut,j.c1Fin), 'font-family:monospace;font-size:12px;white-space:nowrap')
+        + td(cren(j.c2Debut,j.c2Fin), 'font-family:monospace;font-size:12px;white-space:nowrap')
+        + td(cren(j.c3Debut,j.c3Fin), 'font-family:monospace;font-size:12px;white-space:nowrap')
+        + td('<span style="font-family:monospace;font-weight:600;color:var(--bleu)">'+(j.totalHeures!=null&&j.totalHeures!==''?Number(j.totalHeures).toFixed(2)+'h':'—')+'</span>')
+        + td('<span style="font-size:11px;color:var(--texte3)">↗ '+prog+'</span> <span style="font-size:12px;color:var(--texte2)">'+(j.commentaire||'').replace(/</g,'&lt;')+'</span>')
+        + '</tr>';
+    });
+  });
+
   body.innerHTML = '<table style="width:100%;border-collapse:collapse;font-size:13px"><thead><tr>'
-    + th('Date') + th('Type') + th('Créneau 1') + th('Créneau 2') + th('Créneau 3') + th('Total') + th('Commentaire')
-    + '</tr></thead><tbody>'
-    + jours.filter(j => (j.totalHeures && Number(j.totalHeures) > 0) || j.typeJour === 'CP' || j.typeJour === 'AT' || j.typeJour === 'conge' || j.typeJour === 'absence').map(j => {
-        const cren = (d, f) => (fmtHeure(d) && fmtHeure(f)) ? fmtHeure(d)+' → '+fmtHeure(f) : '—';
-        return '<tr>'
-          + td('<strong>'+(j.dateJour||'—')+'</strong><div style="font-size:11px;color:var(--texte3)">'+(j.jourSemaine||'')+'</div>', 'white-space:nowrap')
-          + td(typeBadge(j.typeJour))
-          + td(cren(j.c1Debut,j.c1Fin), 'font-family:monospace;font-size:12px;white-space:nowrap')
-          + td(cren(j.c2Debut,j.c2Fin), 'font-family:monospace;font-size:12px;white-space:nowrap')
-          + td(cren(j.c3Debut,j.c3Fin), 'font-family:monospace;font-size:12px;white-space:nowrap')
-          + td('<span style="font-family:monospace;font-weight:600;color:var(--bleu)">'+(j.totalHeures!=null&&j.totalHeures!==''?Number(j.totalHeures).toFixed(2)+'h':'—')+'</span>')
-          + td('<span style="font-size:12px;color:var(--texte2)">'+(j.commentaire||'—').replace(/</g,'&lt;')+'</span>')
-          + '</tr>';
-      }).join('')
-    + '</tbody></table>';
+    + th('Date') + th('Type') + th('Créneau 1') + th('Créneau 2') + th('Créneau 3') + th('Jour') + th('↗ Cumul sem. / Commentaire')
+    + '</tr></thead><tbody>' + rows + '</tbody></table>';
 }
 
 async function ouvrirSaisies(collabId, btn) {
