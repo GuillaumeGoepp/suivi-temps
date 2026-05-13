@@ -411,7 +411,7 @@ th.sort-desc::after { content: ' ↓'; opacity: 1; color: var(--bleu); }
   </div>
 </div>
 <div class="modal-overlay" id="modal-saisies">
-  <div class="modal modal-lg">
+  <div class="modal modal-lg" style="max-width:900px;width:95vw">
     <div class="modal-header">
       <span class="modal-title" id="saisies-titre">Saisies</span>
       <button class="modal-close" onclick="fermerModal('modal-saisies')">×</button>
@@ -968,6 +968,9 @@ async function ouvrirSaisies(collabId, btn) {
     const d = await jsonpFetch(url);
     if (!d.ok) { document.getElementById('saisies-body').innerHTML = '<div class="error-banner">Erreur lors du chargement.</div>'; return; }
     renderSaisies(d.jours || [], collabId);
+    // Mode lecture seule : masquer note et valider
+    const footer = document.querySelector('#modal-saisies .modal-footer');
+    if (footer) footer.style.display = 'none';
   } catch(e) {
     document.getElementById('saisies-body').innerHTML = '<div class="error-banner">Erreur : ' + e.message + '</div>';
   }
@@ -999,6 +1002,8 @@ async function ouvrirSaisiesPaie(collabId, btn) {
   document.getElementById('paie-indicateur').style.display = 'none';
   document.querySelector('#vue-paie .card:first-child').style.display = 'none';
   document.getElementById('paie-detail').style.display = 'block';
+    const footer = document.querySelector('#modal-saisies .modal-footer');
+    if (footer) footer.style.display = '';
   document.getElementById('table-saisies-paie').innerHTML = '<div class="loader"><div class="spinner"></div>Chargement…</div>';
   document.getElementById('filtres-paie').innerHTML = '';
   try {
