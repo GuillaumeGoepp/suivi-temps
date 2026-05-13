@@ -924,6 +924,23 @@ function retourPaie() {
   chargerPaie(paieCurrentPeriode);
 }
 
+async function ouvrirSaisies(collabId, btn) {
+  const nomAffiche = btn.closest('tr').querySelector('td strong').textContent;
+  document.getElementById('saisies-titre').textContent = 'Saisies — ' + nomAffiche;
+  document.getElementById('saisies-body').innerHTML = '<div class="loader"><div class="spinner"></div>Chargement…</div>';
+  document.getElementById('modal-saisies').classList.add('open');
+  try {
+    let url = API_URL + '?action=bo_getJoursCollab&token=' + encodeURIComponent(ADMIN_TOKEN)
+            + '&collabId=' + encodeURIComponent(collabId);
+    if (recapPeriodeId) url += '&periodeId=' + encodeURIComponent(recapPeriodeId);
+    const d = await jsonpFetch(url);
+    if (!d.ok) { document.getElementById('saisies-body').innerHTML = '<div class="error-banner">Erreur lors du chargement.</div>'; return; }
+    renderSaisies(d.jours || [], collabId);
+  } catch(e) {
+    document.getElementById('saisies-body').innerHTML = '<div class="error-banner">Erreur réseau.</div>';
+  }
+}
+
 async function ouvrirSaisiesPaie(collabId, btn) {
   _paieCurrentCollab = collabId;
   const nomAffiche = btn.closest('tr').querySelector('td strong').textContent;
