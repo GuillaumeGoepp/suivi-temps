@@ -989,7 +989,7 @@ function renderSaisies(jours, collabId) {
     });
   });
 
-  body.innerHTML = '<table style="width:100%;border-collapse:collapse;font-size:13px"><thead><tr>'
+  body.innerHTML = '<table style="width:100%;border-collapse:collapse;font-size:13px"><thead style="position:sticky;top:0;z-index:1"><tr>'
     + th('Date') + th('Type') + th('Créneau 1') + th('Créneau 2') + th('Créneau 3') + th('Jour') + th('Cumul sem.') + th('Commentaire')
     + '</tr></thead><tbody>'
     + jours.map(j => {
