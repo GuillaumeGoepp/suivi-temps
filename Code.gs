@@ -83,10 +83,51 @@ function saveHoraires(token, params) {
     const sc=(n,v)=>{const c=headers.indexOf(n);if(c>=0)sheet.getRange(idx+1,c+1).setValue(v);};
     sc('type_jour',tj);sc('c1_debut',c1d);sc('c1_fin',c1f);sc('c2_debut',c2d);sc('c2_fin',c2f);sc('c3_debut',c3d);sc('c3_fin',c3f);sc('commentaire',params.commentaire||'');sc('total_heures',total);sc('date_derniere_modif',Utilities.formatDate(new Date(),'Europe/Paris','dd/MM/yyyy HH:mm'));
     const nm=headers.indexOf('nb_modifications');if(nm>=0){const cur=Number(sheet.getRange(idx+1,nm+1).getValue())||0;sheet.getRange(idx+1,nm+1).setValue(cur+1);}
+    _recalculerSemaineCollab(collab.collab_id, data[idx][headers.indexOf('date_jour')], sheet, sheet.getDataRange().getValues(), headers);
     return{ok:true};
   } finally {
     lock.releaseLock();
   }
+}
+function _recalculerSemaineCollab(collabId, dateJour, sheet, data, headers) {
+  // Trouver le lundi de la semaine du jour
+  const d = new Date(dateJour);
+  const jourSem = d.getDay() === 0 ? 6 : d.getDay() - 1;
+  const lundi = new Date(d);
+  lundi.setDate(d.getDate() - jourSem);
+  lundi.setHours(0,0,0,0);
+  const dimanche = new Date(lundi);
+  dimanche.setDate(lundi.getDate() + 6);
+  dimanche.setHours(23,59,59,999);
+
+  // Trouver tous les jours de la semaine pour ce collab
+  const idxCollabId = headers.indexOf('collab_id');
+  const idxDateJour = headers.indexOf('date_jour');
+  const idxTotalH = headers.indexOf('total_heures');
+  const idxTotalProg = headers.indexOf('total_hebdo_prog');
+  if (idxTotalProg < 0) return;
+
+  // Collecter les lignes de la semaine, triées par date
+  const lignesSemaine = [];
+  for (let i = 1; i < data.length; i++) {
+    if (String(data[i][idxCollabId]) !== String(collabId)) continue;
+    const dj = new Date(data[i][idxDateJour]);
+    if (isNaN(dj)) continue;
+    dj.setHours(0,0,0,0);
+    if (dj >= lundi && dj <= dimanche) {
+      lignesSemaine.push({ row: i + 1, date: dj, totalH: Number(data[i][idxTotalH]) || 0 });
+    }
+  }
+
+  // Trier par date croissante
+  lignesSemaine.sort((a, b) => a.date - b.date);
+
+  // Calculer le progressif et écrire en batch
+  let cumul = 0;
+  lignesSemaine.forEach(ligne => {
+    cumul += ligne.totalH;
+    sheet.getRange(ligne.row, idxTotalProg + 1).setValue(cumul);
+  });
 }
 function bo_getCollabs(token) {
   if(!checkAdmin(token))return{ok:false,error:'Acces refuse'};
@@ -172,6 +213,11 @@ function bo_saveJour(token, params) {
     sc('total_heures',(tj==='travaillée'||tj==='travaille'||tj==='AT')?diff(c1d,c1f)+diff(c2d,c2f)+diff(c3d,c3f):0);
     sc('date_derniere_modif',Utilities.formatDate(new Date(),'Europe/Paris','dd/MM/yyyy HH:mm')+' (admin)');
     sc('modif_admin',Utilities.formatDate(new Date(),'Europe/Paris','dd/MM/yyyy HH:mm'));
+    const dataFresh = sheet.getDataRange().getValues();
+const headersFresh = dataFresh[0].map(h => String(h).trim());
+const collabIdJour = dataFresh[idx][headersFresh.indexOf('collab_id')];
+const dateJourJour = dataFresh[idx][headersFresh.indexOf('date_jour')];
+_recalculerSemaineCollab(collabIdJour, dateJourJour, sheet, dataFresh, headersFresh);
     return{ok:true};
   } finally {
     lock.releaseLock();
@@ -619,4 +665,13 @@ function bo_saveNoteAdmin(token, periodeId, collabId, note) {
   const nc = headers.indexOf('note_admin');
   sheet.getRange(idx+1, nc+1).setValue(note||'');
   return {ok:true};
+}
+function testTotalHebdo() {
+  const result = saveHoraires('f69kj5pi', {
+    jourId: 'COLL006_2026-05-13',
+    typeJour: 'travaillée',
+    c1Debut: '08:00',
+    c1Fin: '12:00'
+  });
+  Logger.log(JSON.stringify(result));
 }
