@@ -218,7 +218,7 @@ th.sort-desc::after { content: ' ↓'; opacity: 1; color: var(--bleu); }
         </div>
         <div class="table-wrap">
           <table>
-            <thead><tr><th>Nom</th><th>Type période</th><th>Début</th><th>Fin</th><th>Clôture auto</th><th>Statut</th><th>Actions</th></tr></thead>
+            <thead><tr><th>Nom</th><th>Type période</th><th>Début</th><th>Fin</th><th>Statut</th><th>Actions</th></tr></thead>
             <tbody id="periodes-tbody"><tr><td colspan="6"><div class="loader"><div class="spinner"></div>Chargement…</div></td></tr></tbody>
           </table>
         </div>
@@ -437,13 +437,13 @@ th.sort-desc::after { content: ' ↓'; opacity: 1; color: var(--bleu); }
     </div>
     <div class="modal-body">
       <div class="form-grid">
-        <div class="form-group"><label>Nom *</label><input type="text" id="p-nom" placeholder="ex: DECAL_2026_06"></div>
+        <div class="form-group"><label>Nom</label><input type="text" id="p-nom" readonly style="background:#f5f7fa;color:var(--texte2)"></div>
         <div class="form-group"><label>Type période</label>
-          <select id="p-type-periode"><option value="">— Choisir —</option><option value="civil">Civil (1er au 31)</option><option value="decalee">Décalée (15 au 14)</option></select>
+          <select id="p-type-periode"><option value="">— Choisir —</option><option value="civil">Civil</option><option value="decalee">Décalée</option></select>
         </div>
         <div class="form-group"><label>Date début *</label><input type="date" id="p-debut"></div>
         <div class="form-group"><label>Date fin *</label><input type="date" id="p-fin"></div>
-        <div class="form-group"><label>Date clôture</label><input type="date" id="p-cloture"></div>
+        <input type="hidden" id="p-cloture">
 
       </div>
       <div id="modal-periode-error" style="display:none;margin-top:14px" class="error-banner"></div>
@@ -1206,8 +1206,9 @@ function modifierPeriode(periodeId) {
   document.getElementById('modal-periode-titre').textContent = 'Modifier la période';
   document.getElementById('p-type-periode').value = p.typePeriode || '';
   document.getElementById('p-debut').value = p.dateDebut ? p.dateDebut.split('/').reverse().join('-') : '';
-  document.getElementById('p-fin').value = p.dateFin ? p.dateFin.split('/').reverse().join('-') : '';
-  document.getElementById('p-cloture').value = p.dateCloture ? p.dateCloture.split('/').reverse().join('-') : '';
+  const finVal = p.dateFin ? p.dateFin.split('/').reverse().join('-') : '';
+  document.getElementById('p-fin').value = finVal;
+  if (finVal) { const dc = new Date(finVal); dc.setDate(dc.getDate()+1); document.getElementById('p-cloture').value = dc.toISOString().split('T')[0]; }
   document.getElementById('p-nom').value = p.nomPeriode || '';
   document.getElementById('modal-periode-error').style.display = 'none';
   document.getElementById('btn-sauver-periode').dataset.periodeId = periodeId;
@@ -1323,8 +1324,8 @@ async function chargerPeriodes() {
       const sL = p.statut==='ouverte' ? 'Ouverte' : p.statut==='cloturee' ? 'Clôturée' : 'Planifiée';
       const canEdit = p.statut === 'planifiee';
       const btnSuppr = canEdit ? `<button class="btn btn-danger btn-sm" onclick="supprimerPeriode('${p.periodeId}','${p.nomPeriode}')">Supprimer</button>` : '';
-      const btnEdit = `<button class="btn btn-warning btn-sm" onclick="modifierPeriode('${p.periodeId}')">Modifier</button>`;
-      return `<tr><td><strong>${p.nomPeriode}</strong></td><td>${p.typePeriode||'—'}</td><td>${fmtDate(p.dateDebut)}</td><td>${fmtDate(p.dateFin)}</td><td>${fmtDate(p.dateCloture)}</td><td><span class="badge ${sC}">${sL}</span></td><td style="display:flex;gap:6px">${btnEdit}${btnSuppr}</td></tr>`;
+      const btnEdit = canEdit ? `<button class="btn btn-warning btn-sm" onclick="modifierPeriode('${p.periodeId}')">Modifier</button>` : '';
+      return `<tr><td><strong>${p.nomPeriode}</strong></td><td>${p.typePeriode||'—'}</td><td>${fmtDate(p.dateDebut)}</td><td>${fmtDate(p.dateFin)}</td><td><span class="badge ${sC}">${sL}</span></td><td style="display:flex;gap:6px">${btnEdit}${btnSuppr}</td></tr>`;
     }).join('');
   } catch(e) {}
 }
