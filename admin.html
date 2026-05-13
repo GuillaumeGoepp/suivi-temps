@@ -1273,9 +1273,10 @@ async function sauverPeriode() {
     fermerModal('modal-periode');
     chargerPeriodes();
   } catch(e) {
-    errBox.textContent = 'Erreur réseau.';
-    errBox.style.display = 'block';
+    // JSONP peut rejeter malgré une réponse ok
+    fermerModal('modal-periode');
     btn.disabled = false; btn.textContent = 'Enregistrer';
+    chargerPeriodes();
   }
 }
 
