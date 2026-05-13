@@ -1200,7 +1200,7 @@ function genNomPeriode(dateDebut, typeContrat) {
 }
 
 function modifierPeriode(periodeId) {
-  if (!confirm('⚠️ Opération sensible — modifier les dates d\'une période peut affecter les saisies en cours. Continuer ?')) return;
+  if (!confirm('⚠️ Opération sensible. Veillez à la continuité des périodes et aux dates. Continuer ?')) return;
   const p = periodesData.find(x => x.periodeId === periodeId);
   if (!p) return;
   document.getElementById('modal-periode-titre').textContent = 'Modifier la période';
@@ -1327,7 +1327,7 @@ async function chargerPeriodes() {
       const sL = p.statut==='ouverte' ? 'Ouverte' : p.statut==='cloturee' ? 'Clôturée' : 'Planifiée';
       const canEdit = p.statut === 'planifiee';
       const btnSuppr = canEdit ? `<button class="btn btn-danger btn-sm" onclick="supprimerPeriode('${p.periodeId}','${p.nomPeriode}')">Supprimer</button>` : '';
-      const btnEdit = canEdit ? `<button class="btn btn-warning btn-sm" onclick="modifierPeriode('${p.periodeId}')">Modifier</button>` : '';
+      const btnEdit = canEdit ? `<button class="btn btn-primary btn-sm" onclick="modifierPeriode('${p.periodeId}')">Modifier</button>` : '';
       return `<tr><td><strong>${p.nomPeriode}</strong></td><td>${p.typePeriode||'—'}</td><td>${fmtDate(p.dateDebut)}</td><td>${fmtDate(p.dateFin)}</td><td><span class="badge ${sC}">${sL}</span></td><td style="display:flex;gap:6px">${btnEdit}${btnSuppr}</td></tr>`;
     }).join('');
   } catch(e) {}
