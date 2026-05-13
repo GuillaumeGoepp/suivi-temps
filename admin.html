@@ -990,8 +990,23 @@ function renderSaisies(jours, collabId) {
   });
 
   body.innerHTML = '<table style="width:100%;border-collapse:collapse;font-size:13px"><thead><tr>'
-    + th('Date') + th('Type') + th('Créneau 1') + th('Créneau 2') + th('Créneau 3') + th('Jour') + th('↗ Cumul sem. / Commentaire')
-    + '</tr></thead><tbody>' + rows + '</tbody></table>';
+    + th('Date') + th('Type') + th('Créneau 1') + th('Créneau 2') + th('Créneau 3') + th('Jour') + th('Cumul sem.') + th('Commentaire')
+    + '</tr></thead><tbody>'
+    + jours.map(j => {
+        const cren = (d, f) => (fmtHeure(d) && fmtHeure(f)) ? fmtHeure(d)+' → '+fmtHeure(f) : '—';
+        const prog = j.totalHebdoProg != null && j.totalHebdoProg !== '' ? Number(j.totalHebdoProg).toFixed(2)+'h' : '—';
+        return '<tr>'
+          + td('<strong>'+(j.dateJour||'—')+'</strong><div style="font-size:11px;color:var(--texte3)">'+(j.jourSemaine||'')+'</div>', 'white-space:nowrap')
+          + td(typeBadge(j.typeJour))
+          + td(cren(j.c1Debut,j.c1Fin), 'font-family:monospace;font-size:12px;white-space:nowrap')
+          + td(cren(j.c2Debut,j.c2Fin), 'font-family:monospace;font-size:12px;white-space:nowrap')
+          + td(cren(j.c3Debut,j.c3Fin), 'font-family:monospace;font-size:12px;white-space:nowrap')
+          + td('<span style="font-family:monospace;font-weight:600;color:var(--bleu)">'+(j.totalHeures!=null&&j.totalHeures!==''?Number(j.totalHeures).toFixed(2)+'h':'—')+'</span>')
+          + td('<span style="font-family:monospace;color:var(--vert)">'+prog+'</span>')
+          + td('<span style="font-size:12px;color:var(--texte2)">'+(j.commentaire||'—').replace(/</g,'&lt;')+'</span>')
+          + '</tr>';
+      }).join('')
+    + '</tbody></table>';
 }
 
 async function ouvrirSaisies(collabId, btn) {
