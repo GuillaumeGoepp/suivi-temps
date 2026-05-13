@@ -937,7 +937,7 @@ async function ouvrirSaisies(collabId, btn) {
     if (!d.ok) { document.getElementById('saisies-body').innerHTML = '<div class="error-banner">Erreur lors du chargement.</div>'; return; }
     renderSaisies(d.jours || [], collabId);
   } catch(e) {
-    document.getElementById('saisies-body').innerHTML = '<div class="error-banner">Erreur réseau.</div>';
+    document.getElementById('saisies-body').innerHTML = '<div class="error-banner">Erreur : ' + e.message + '</div>';
   }
 }
 
