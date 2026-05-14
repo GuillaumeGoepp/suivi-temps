@@ -953,8 +953,11 @@
     async function prefetchMesJours() {
         try {
             const d = await jsonpFetch(API_URL + '?action=getMesJours&token=' + COLLAB_ID);
-            if (d.ok)
+            if (d.ok) {
                 mesJoursCache = d;
+                if (d.periode && d.periode.dateDebut && d.periode.dateFin)
+                    document.getElementById('hdr-periode').textContent = 'Du ' + d.periode.dateDebut + ' au ' + d.periode.dateFin;
+            }
         } catch (e) {}
     }
     function calculTotal(p) {
@@ -1014,7 +1017,12 @@
             CP: 'Congé payé',
             AT: 'Arrêt travail'
         };
-        let html = '<div class="block"><div class="block-label">' + (periode || 'Période en cours') + '</div>';
+        const labelPeriode = (periode && periode.dateDebut && periode.dateFin)
+            ? 'Du ' + periode.dateDebut + ' au ' + periode.dateFin
+            : 'Période en cours';
+        if (periode && periode.dateDebut && periode.dateFin)
+            document.getElementById('hdr-periode').textContent = labelPeriode;
+        let html = '<div class="block"><div class="block-label">' + labelPeriode + '</div>';
         for (const j of passes) {
             const _p=(j.dateJour||'').split('/');
             const d = _p.length===3 ? new Date(_p[2],_p[1]-1,_p[0]) : new Date(j.dateJour);
@@ -1032,10 +1040,13 @@
                 statutHtml = '<span style="font-size:13px;color:var(--texte2);font-weight:500;">' + typeIcon[t] + ' ' + typeLabel[t] + '</span>';
             else
                 statutHtml = '<span style="font-family:monospace;font-size:16px;font-weight:500;color:var(--texte2);">' + Number(j.totalHeures).toFixed(2) + 'h</span>';
+            const hebdoHtml = (j.totalHebdoProg != null && j.totalHebdoProg !== '')
+                ? '<div style="font-size:11px;color:var(--texte3);margin-top:2px;">sem. ' + Number(j.totalHebdoProg).toFixed(1) + 'h</div>'
+                : '';
             html += '<div class="jour-item" onclick="ouvrirJourPasse(\'' + j.jourId + '\', ' + modifiable + ')">';
             html += '<span class="jour-dot ' + (saisi ? (nonTravaillee ? 'dot-special' : 'dot-ok') : 'dot-vide') + '"></span>';
             html += '<div class="jour-info"><div class="jour-nom">' + JOURS[d.getDay()] + (isToday ? ' <span style="font-size:11px;background:#e8f2e8;color:var(--vert);border-radius:8px;padding:1px 6px;">Auj.</span>' : '') + (modifiable && !isToday ? ' <span style="font-size:11px;color:var(--texte3);">✏️</span>' : '') + '</div>';
-            html += '<div class="jour-date">' + d.getDate() + ' ' + MOIS[d.getMonth()] + '</div></div><div style="text-align:right">' + statutHtml + '</div></div>';
+            html += '<div class="jour-date">' + d.getDate() + ' ' + MOIS[d.getMonth()] + '</div></div><div style="text-align:right">' + statutHtml + hebdoHtml + '</div></div>';
         }
         html += '</div>';
         document.getElementById('mesjours-content').innerHTML = html;
