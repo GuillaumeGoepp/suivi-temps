@@ -345,6 +345,7 @@ th.sort-desc::after { content: ' ↓'; opacity: 1; color: var(--bleu); }
           <select id="f-statut"><option value="en_attente">En attente</option><option value="actif">Actif</option><option value="inactif">Inactif</option></select>
         </div>
         <div class="form-group"><label>Date d'activation</label><input type="date" id="f-date-activation"></div>
+        <div class="form-group"><label>Matricule Silae</label><input type="text" id="f-matricule-silae" placeholder="ex: 00042"></div>
         <div class="form-group full">
           <label>Équipe</label>
           <select id="f-equipe"><option value="">— Aucune équipe —</option></select>
@@ -616,6 +617,7 @@ function ouvrirModalCollab() {
   document.getElementById('f-structure').value = '';
   document.getElementById('f-contrat').value = '';
   document.getElementById('f-statut').value = 'en_attente';
+  document.getElementById('f-matricule-silae').value = '';
   document.getElementById('f-equipe').value = '';
   document.getElementById('modal-error').style.display = 'none';
   document.getElementById('btn-sauver').disabled = false;
@@ -634,6 +636,7 @@ function ouvrirModalCollabData(encoded) {
   document.getElementById('f-contrat').value = c.typeContrat||'';
   document.getElementById('f-heures').value = c.heuresHebdo||'';
   document.getElementById('f-statut').value = c.statut||'actif';
+  document.getElementById('f-matricule-silae').value = c.matriculeSilae||'';
   document.getElementById('f-date-activation').value = c.dateActivation||'';
   document.getElementById('f-equipe').value = c.equipeId||'';
   document.getElementById('modal-error').style.display = 'none';
@@ -734,6 +737,7 @@ async function sauverCollab() {
     typeContrat: document.getElementById('f-contrat').value,
     heuresHebdo: document.getElementById('f-heures').value,
     statut: document.getElementById('f-statut').value,
+    matriculeSilae: document.getElementById('f-matricule-silae').value,
     dateActivation: document.getElementById('f-date-activation').value,
     equipeId: document.getElementById('f-equipe').value,
     token: ADMIN_TOKEN,
