@@ -1134,9 +1134,6 @@ async function toggleHeuresEdit() {
   }
   document.getElementById('table-saisies-paie').innerHTML = buildTableSaisies(window._jours_paie_current, window._paie_filtre_current||'tous', window._collab_paie_current);
 }
-  }
-  document.getElementById('table-saisies-paie').innerHTML = buildTableSaisies(window._jours_paie_current, window._paie_filtre_current||'tous', window._collab_paie_current);
-}
 
 function majTotalPaie(idx) {
   const toMin = t => { if (!t) return 0; const [h,m] = t.split(':').map(Number); return h*60+m; };
