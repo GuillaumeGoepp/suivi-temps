@@ -1120,8 +1120,10 @@ function buildTableSaisies(jours, filtre, collabId) {
         const typeSelect = '<select id="jp'+idx+'-type" onchange="majTotalPaie('+idx+')" style="font-size:12px;padding:3px 6px;border-radius:6px;border:1.5px solid #dce6f0">'
           + types.map(t => '<option value="'+t+'"'+(j.typeJour===t?' selected':'')+'>'+t+'</option>').join('')
           + '</select>';
-        const timeInput = (id, val) => '<input type="time" id="'+id+'" value="'+fmtHeure(val)+'" onchange="majTotalPaie('+idx+')" style="width:62px;font-size:12px;padding:3px 4px">';
-        return '<tr id="jpr-'+idx+'">'
+        const timeInput = (id, val) => '<input type="time" id="'+id+'" value="'+fmtHeure(val)+'" onchange="majTotalPaie('+idx+')" style="width:55px;font-size:12px;padding:3px 4px">';
+        const jourSem = (j.jourSemaine||'').toLowerCase();
+        const bgWeekend = jourSem.includes('sam') ? 'background:#fff8f0;' : jourSem.includes('dim') ? 'background:#fff0f0;' : '';
+        return '<tr id="jpr-'+idx+'" style="'+bgWeekend+'">'
           + td('<strong>'+fmtDP(j.dateJour)+'</strong>','white-space:nowrap')
           + td(typeSelect)
           + td('<div style="display:flex;align-items:center;gap:4px">'+timeInput('jp'+idx+'-c1d',j.c1Debut)+' <span style="color:var(--texte3)">→</span> '+timeInput('jp'+idx+'-c1f',j.c1Fin)+'</div>','white-space:nowrap')
