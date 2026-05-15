@@ -289,6 +289,12 @@ th.sort-desc::after { content: ' ↓'; opacity: 1; color: var(--bleu); }
         <div class="card-header">
           <span class="card-title">Récapitulatif par collaborateur</span>
         </div>
+        <div style="padding:12px 24px;border-bottom:1px solid #e8f0f8;display:flex;gap:6px;align-items:center">
+          <button class="filter-btn active" onclick="setFiltrePaie('',this)">Toutes</button>
+          <button class="filter-btn" onclick="setFiltrePaie('SCEA',this)">SCEA</button>
+          <button class="filter-btn" onclick="setFiltrePaie('SAS',this)">SAS</button>
+          <button class="filter-btn" onclick="setFiltrePaie('SARL',this)">SARL</button>
+        </div>
         <div class="table-wrap">
           <table>
             <thead>
@@ -765,6 +771,7 @@ async function toggleCollab(collabId, btn) {
 
 // ── PAIE ─────────────────────────────────────────────────────────────────────
 let paieCurrentPeriode = '';
+let filtrePaieStructure = '';
 
 async function chargerPaie(periodeId) {
   paieCurrentPeriode = periodeId || '';
@@ -819,6 +826,40 @@ function renderPaie(recap, periodeId) {
     return (a.nom_affiche||'').localeCompare(b.nom_affiche||'');
   });
 
+  document.getElementById('paie-tbody').innerHTML = sorted.map(r => {
+    const valide = r.statut_validation === 'valide';
+    const collabEnc = encodeURIComponent(r.collab_id);
+    return `<tr style="${valide?'background:var(--vert-pale)':''}">
+      <td><strong>${r.nom_affiche||'—'}</strong></td>
+      <td>${r.structure||'—'}</td>
+      <td>${r.type_contrat||'—'}</td>
+      <td>${r.heures_hebdo?r.heures_hebdo+'h':'—'}</td>
+      <td><span style="font-family:monospace;font-weight:600">${Number(r.total_heures||0).toFixed(2)}h</span></td>
+      <td>${r.nb_jours_travailles||0}</td>
+      <td>${r.nb_cp||0}</td>
+      <td>${r.nb_at||0}</td>
+      <td>${valide?'<span class="badge badge-actif">✅ Validé</span>':'<span class="badge badge-attente">⏳ En attente</span>'}</td>
+      <td><span style="font-size:12px;color:var(--texte2)">${r.note_admin||'—'}</span></td>
+      <td><button class="btn btn-primary btn-sm" onclick="ouvrirSaisiesPaie('${collabEnc}', this)">📋 Détail</button></td>
+    </tr>`;
+  }).join('');
+}
+
+function setFiltrePaie(val, btn) {
+  filtrePaieStructure = val;
+  document.querySelectorAll('#paie-card .filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderPaieFiltered();
+}
+
+function renderPaieFiltered() {
+  const recap = window._paie_recap_current || [];
+  const filtered = filtrePaieStructure ? recap.filter(r => r.structure === filtrePaieStructure) : recap;
+  const sorted = [...filtered].sort((a,b) => {
+    if (a.statut_validation==='en_attente' && b.statut_validation!=='en_attente') return -1;
+    if (a.statut_validation!=='en_attente' && b.statut_validation==='en_attente') return 1;
+    return (a.nom_affiche||'').localeCompare(b.nom_affiche||'');
+  });
   document.getElementById('paie-tbody').innerHTML = sorted.map(r => {
     const valide = r.statut_validation === 'valide';
     const collabEnc = encodeURIComponent(r.collab_id);
