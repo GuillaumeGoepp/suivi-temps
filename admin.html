@@ -1121,8 +1121,10 @@ function buildTableSaisies(jours, filtre, collabId) {
           + types.map(t => '<option value="'+t+'"'+(j.typeJour===t?' selected':'')+'>'+t+'</option>').join('')
           + '</select>';
         const timeInput = (id, val) => '<input type="time" id="'+id+'" value="'+fmtHeure(val)+'" onchange="majTotalPaie('+idx+')" style="width:55px;font-size:12px;padding:3px 4px">';
-        const jourSem = (j.jourSemaine||'').toLowerCase();
-        const bgWeekend = jourSem.includes('sam') ? 'background:#fff8f0;' : jourSem.includes('dim') ? 'background:#fff0f0;' : '';
+        const _pDate = (j.dateJour||'').split('/');
+        const _dDate = _pDate.length===3 ? new Date(_pDate[2],_pDate[1]-1,_pDate[0]) : new Date(j.dateJour);
+        const _dow = _dDate.getDay();
+        const bgWeekend = _dow===6 ? 'background:#fff8f0;' : _dow===0 ? 'background:#fff0f0;' : '';
         return '<tr id="jpr-'+idx+'" style="'+bgWeekend+'">'
           + td('<strong>'+fmtDP(j.dateJour)+'</strong>','white-space:nowrap')
           + td(typeSelect)
