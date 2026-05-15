@@ -85,6 +85,7 @@ textarea { resize: vertical; min-height: 72px; }
 .creneau-label { font-size: 11px; font-weight: 600; color: var(--texte3); text-transform: uppercase; letter-spacing: .05em; }
 .creneau-inputs { display: flex; align-items: center; gap: 6px; }
 .creneau-inputs input[type=time] { width: 78px; font-size: 13px; padding: 6px 8px; }
+    input[type=time]::-webkit-calendar-picker-indicator { display:none; }
 .creneau-sep { font-size: 12px; color: var(--texte3); }
 .total-badge { font-family: 'DM Mono', monospace; font-size: 13px; font-weight: 600; color: var(--bleu); background: var(--bleu-pale); padding: 3px 10px; border-radius: 12px; }
 .remarque-existante { background: var(--orange-pale); border-radius: 8px; padding: 8px 12px; font-size: 13px; color: var(--orange); margin-bottom: 6px; }
@@ -1104,22 +1105,30 @@ function buildTableSaisies(jours, filtre, collabId) {
   const td = (c,x) => '<td style="padding:6px 10px;border-bottom:1px solid #f0f4f8;'+(x||'')+'">'+c+'</td>';
   const types = ['travaillée','CP','AT'];
   return '<table style="width:100%;border-collapse:collapse;font-size:13px"><thead><tr>'
-    + th('Date')+th('Type')+th('Matin')+th('Après-midi')+th('Créneau 3')+th('Total')+th('Commentaire')+th('')
+    + th('Date')+th('Type')+th('Matin')+th('Après-midi')+th('Créneau 3')+th('Total')+th('Sem.')+th('Commentaire')+th('')
     + '</tr></thead><tbody>'
     + filtered.map((j, idx) => {
         const jourId = (j.jourId||'').replace(/'/g,'');
+        const JOURS_P = ['Dim.','Lun.','Mar.','Mer.','Jeu.','Ven.','Sam.'];
+        const fmtDP = s => { const p=(s||'').split('/'); if(p.length!==3) return s; const d=new Date(p[2],p[1]-1,p[0]); return JOURS_P[d.getDay()]+' '+p[0]+'/'+p[1]; };
+        const getISOMon = s => { const p=(s||'').split('/'); if(p.length!==3) return ''; const d=new Date(p[2],p[1]-1,p[0]); const dow=d.getDay()===0?6:d.getDay()-1; const l=new Date(d); l.setDate(d.getDate()-dow); return l.toISOString().split('T')[0]; };
+        const cumSemP = {}; let cumCur = 0;
+        filtered.forEach(jj => { const l=getISOMon(jj.dateJour); if(!cumSemP[l]) cumSemP[l]=0; cumSemP[l]+=(Number(jj.totalHeures)||0); });
         const tot = j.totalHeures!=null&&j.totalHeures!==''?Number(j.totalHeures).toFixed(2)+'h':'—';
+        const lunP = getISOMon(j.dateJour);
+        const semTot = cumSemP[lunP]!=null ? Number(cumSemP[lunP]).toFixed(2).replace('.',',')+' h' : '—';
         const typeSelect = '<select id="jp'+idx+'-type" onchange="majTotalPaie('+idx+')" style="font-size:12px;padding:3px 6px;border-radius:6px;border:1.5px solid #dce6f0">'
           + types.map(t => '<option value="'+t+'"'+(j.typeJour===t?' selected':'')+'>'+t+'</option>').join('')
           + '</select>';
         const timeInput = (id, val) => '<input type="time" id="'+id+'" value="'+fmtHeure(val)+'" onchange="majTotalPaie('+idx+')" style="width:82px;font-size:12px;padding:3px 6px">';
         return '<tr id="jpr-'+idx+'">'
-          + td('<strong>'+(j.dateJour||'—')+'</strong><div style="font-size:11px;color:var(--texte3)">'+(j.jourSemaine||'')+'</div>','white-space:nowrap')
+          + td('<strong>'+fmtDP(j.dateJour)+'</strong>','white-space:nowrap')
           + td(typeSelect)
           + td('<div style="display:flex;align-items:center;gap:4px">'+timeInput('jp'+idx+'-c1d',j.c1Debut)+' <span style="color:var(--texte3)">→</span> '+timeInput('jp'+idx+'-c1f',j.c1Fin)+'</div>','white-space:nowrap')
           + td('<div style="display:flex;align-items:center;gap:4px">'+timeInput('jp'+idx+'-c2d',j.c2Debut)+' <span style="color:var(--texte3)">→</span> '+timeInput('jp'+idx+'-c2f',j.c2Fin)+'</div>','white-space:nowrap')
           + td('<div style="display:flex;align-items:center;gap:4px">'+timeInput('jp'+idx+'-c3d',j.c3Debut)+' <span style="color:var(--texte3)">→</span> '+timeInput('jp'+idx+'-c3f',j.c3Fin)+'</div>','white-space:nowrap')
           + td('<span id="jptot-'+idx+'" style="font-family:monospace;font-weight:600;color:var(--bleu)">'+tot+'</span>')
+          + td('<span style="font-size:11px;color:var(--texte3)">'+semTot+'</span>')
           + td('<input type="text" id="jp'+idx+'-comm" value="'+(j.commentaire||'').replace(/"/g,'&quot;')+'" placeholder="Commentaire…" style="width:120px;font-size:12px;padding:3px 6px">')
           + '<td style="padding:6px 10px;border-bottom:1px solid #f0f4f8">'
           + '<button class="btn btn-primary btn-sm" onclick="sauverJourPaie('+idx+',\''+jourId+'\',\''+collabId+'\')">💾</button>'
