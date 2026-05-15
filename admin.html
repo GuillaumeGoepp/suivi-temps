@@ -1014,7 +1014,8 @@ function renderSaisies(jours, collabId) {
           + td('<span style="font-family:monospace;color:var(--vert)">'+prog+'</span>')
           + td('<span style="font-size:12px;color:var(--texte2)">'+(j.commentaire||'—').replace(/</g,'&lt;')+'</span>')
           + '</tr>';
-      }).join('')
+      }).join('');
+      })())
     + '</tbody></table>';
 }
 
@@ -1053,7 +1054,10 @@ async function ouvrirSaisiesPaie(collabId, btn) {
     window._paie_filtre_current = 'tous';
     const btnC = document.getElementById('btn-pill-consult');
     const btnM = document.getElementById('btn-pill-modif');
-    if (btnC && btnM) { btnC.classList.add('pill-active'); btnM.classList.remove('pill-active'); }
+    if (btnC && btnM) {
+      btnC.classList.add('pill-active'); btnC.textContent = '👁 Consultation ✓';
+      btnM.classList.remove('pill-active'); btnM.textContent = '✏️ Modification';
+    }
     btnVal.textContent = '✅ Valider';
     btnVal.style.opacity = valide ? '0.45' : '1';
     btnVal.disabled = valide;
@@ -1125,14 +1129,15 @@ function buildTableSaisies(jours, filtre, collabId) {
   return '<table style="width:100%;border-collapse:collapse;font-size:13px"><thead><tr>'
     + th('Date')+th('Type')+th('Matin')+th('Après-midi')+th('Créneau 3')+th('Total')+th('Sem.')+th('Commentaire')
     + '</tr></thead><tbody>'
-    + filtered.map((j, idx) => {
-        const jourId = (j.jourId||'').replace(/'/g,'');
+    + (() => {
         const JOURS_P = ['Dim.','Lun.','Mar.','Mer.','Jeu.','Ven.','Sam.'];
         const fmtDP = s => { const p=(s||'').split('/'); if(p.length!==3) return s; const d=new Date(p[2],p[1]-1,p[0]); return JOURS_P[d.getDay()]+' '+p[0]+'/'+p[1]; };
         const getISOMon = s => { const p=(s||'').split('/'); if(p.length!==3) return ''; const d=new Date(p[2],p[1]-1,p[0]); const dow=d.getDay()===0?6:d.getDay()-1; const l=new Date(d); l.setDate(d.getDate()-dow); return l.toISOString().split('T')[0]; };
         const cumSemP = {};
         const sortedForCum = [...filtered].sort((a,b) => { const pa=(a.dateJour||'').split('/'),pb=(b.dateJour||'').split('/'); return (pa[2]+pa[1]+pa[0]).localeCompare(pb[2]+pb[1]+pb[0]); });
         sortedForCum.forEach(jj => { const l=getISOMon(jj.dateJour); if(!cumSemP[l]) cumSemP[l]=0; cumSemP[l]+=(Number(jj.totalHeures)||0); jj._semProg=cumSemP[l]; });
+        return filtered.map((j, idx) => {
+        const jourId = (j.jourId||'').replace(/'/g,'');
         const tot = j.totalHeures!=null&&j.totalHeures!==''?Number(j.totalHeures).toFixed(2)+'h':'—';
         const semTot = j._semProg!=null ? Number(j._semProg).toFixed(2).replace('.',',')+' h' : '—';
         const typeSelect = '<select id="jp'+idx+'-type" onchange="majTotalPaie('+idx+')" style="font-size:12px;padding:3px 6px;border-radius:6px;border:1.5px solid #dce6f0">'
@@ -1161,21 +1166,38 @@ function buildTableSaisies(jours, filtre, collabId) {
     + '</tbody></table>';
 }
 
-function toggleHeuresEdit() {
+async function toggleHeuresEdit() {
   window._paie_mode_edit = !window._paie_mode_edit;
-  const btn = document.getElementById('btn-switch-mode');
-  if (btn) {
+  const btnC = document.getElementById('btn-pill-consult');
+  const btnM = document.getElementById('btn-pill-modif');
+  if (btnC && btnM) {
     if (window._paie_mode_edit) {
-      btn.textContent = '✏️ Modification';
-      btn.style.background = '#1a6eb5';
-      btn.style.color = '#fff';
-      btn.style.borderColor = '#1a6eb5';
+      btnC.classList.remove('pill-active');
+      btnC.textContent = '👁️ Consultation';
+      btnM.classList.add('pill-active');
+      btnM.textContent = '✏️ Modification ✓';
+      const badge = document.getElementById('badge-validation-paie');
+      const isValide = badge && badge.innerHTML.includes('Validé');
+      if (isValide) {
+        try {
+          await jsonpFetch(API_URL + '?action=bo_validerCollab&token=' + encodeURIComponent(ADMIN_TOKEN)
+            + '&periodeId=' + encodeURIComponent(paieCurrentPeriode)
+            + '&collabId=' + encodeURIComponent(_paieCurrentCollab)
+            + '&note=' + encodeURIComponent(document.getElementById('modal-note-admin')?.value||''));
+        } catch(e) {}
+        if (badge) badge.innerHTML = '<span style="display:inline-flex;align-items:center;gap:6px;background:#fff3e0;color:#c8833a;padding:5px 14px;border-radius:20px;font-size:13px;font-weight:600"><span style="width:8px;height:8px;border-radius:50%;background:#c8833a;display:inline-block"></span>En attente</span>';
+        const btnVal = document.getElementById('btn-valider-collab');
+        if (btnVal) { btnVal.disabled = false; btnVal.style.opacity = '1'; }
+      }
     } else {
-      btn.textContent = '👁️ Consultation';
-      btn.style.background = '#f0f4f8';
-      btn.style.color = '#4a6fa5';
-      btn.style.borderColor = '#b0c4d8';
+      btnM.classList.remove('pill-active');
+      btnM.textContent = '✏️ Modification';
+      btnC.classList.add('pill-active');
+      btnC.textContent = '👁️ Consultation ✓';
     }
+  }
+  document.getElementById('table-saisies-paie').innerHTML = buildTableSaisies(window._jours_paie_current, window._paie_filtre_current||'tous', window._collab_paie_current);
+}
   }
   document.getElementById('table-saisies-paie').innerHTML = buildTableSaisies(window._jours_paie_current, window._paie_filtre_current||'tous', window._collab_paie_current);
 }
