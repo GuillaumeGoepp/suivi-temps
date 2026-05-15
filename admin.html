@@ -1120,7 +1120,7 @@ function buildTableSaisies(jours, filtre, collabId) {
         const typeSelect = '<select id="jp'+idx+'-type" onchange="majTotalPaie('+idx+')" style="font-size:12px;padding:3px 6px;border-radius:6px;border:1.5px solid #dce6f0">'
           + types.map(t => '<option value="'+t+'"'+(j.typeJour===t?' selected':'')+'>'+t+'</option>').join('')
           + '</select>';
-        const timeInput = (id, val) => '<input type="time" id="'+id+'" value="'+fmtHeure(val)+'" onchange="majTotalPaie('+idx+')" style="width:82px;font-size:12px;padding:3px 6px">';
+        const timeInput = (id, val) => '<input type="time" id="'+id+'" value="'+fmtHeure(val)+'" onchange="majTotalPaie('+idx+')" style="width:62px;font-size:12px;padding:3px 4px">';
         return '<tr id="jpr-'+idx+'">'
           + td('<strong>'+fmtDP(j.dateJour)+'</strong>','white-space:nowrap')
           + td(typeSelect)
