@@ -204,12 +204,13 @@ th.sort-desc::after { content: ' ↓'; opacity: 1; color: var(--bleu); }
                 <th class="sortable" onclick="trierCollabs('statut',this)">Statut</th>
                 <th>Équipe</th>
                 <th>Activation</th>
+                <th>Matricule Silae</th>
                 <th>Lien</th>
                 <th>Actions</th>
               </tr>
             </thead>
             <tbody id="collabs-tbody">
-              <tr><td colspan="9"><div class="loader"><div class="spinner"></div>Chargement…</div></td></tr>
+              <tr><td colspan="10"><div class="loader"><div class="spinner"></div>Chargement…</div></td></tr>
             </tbody>
           </table>
         </div>
@@ -522,7 +523,7 @@ function nomEquipe(equipeId) {
 }
 
 async function chargerCollabs() {
-  document.getElementById('collabs-tbody').innerHTML = '<tr><td colspan="9"><div class="loader"><div class="spinner"></div>Chargement…</div></td></tr>';
+  document.getElementById('collabs-tbody').innerHTML = '<tr><td colspan="10"><div class="loader"><div class="spinner"></div>Chargement…</div></td></tr>';
   try {
     const d = await jsonpFetch(API_URL + '?action=bo_getCollabs&token=' + encodeURIComponent(ADMIN_TOKEN));
     if (d.ok) renderCollabs(d.collabs);
@@ -576,7 +577,7 @@ function renderCollabs(collabs) {
 function renderCollabsFiltered(collabs) {
   const tbody = document.getElementById('collabs-tbody');
   if (!collabs || !collabs.length) {
-    tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;color:var(--texte3);padding:32px">Aucun résultat</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;color:var(--texte3);padding:32px">Aucun résultat</td></tr>';
     return;
   }
   tbody.innerHTML = collabs.map(c => {
@@ -593,6 +594,7 @@ function renderCollabsFiltered(collabs) {
       <td><span class="badge ${badgeClass}">${badgeLabel}</span></td>
       <td style="font-size:13px;color:var(--texte2)">${nomEquipe(c.equipeId)}</td>
       <td style="font-size:13px;color:var(--texte2)">${fmtDate(c.dateActivation)}</td>
+      <td style="font-size:13px;color:var(--texte2)">${c.matriculeSilae||'—'}</td>
       <td>${c.lien ? `<button class="token-link" onclick="copierLien('${c.lien}')" title="${c.lien}">📋 ${c.token}</button>` : '—'}</td>
       <td style="display:flex;gap:6px;flex-wrap:wrap">
         <button class="btn btn-secondary btn-sm" onclick="ouvrirModalCollabData('${collabJson}')">✏️</button>
@@ -1462,7 +1464,7 @@ function renderRecapFiltered() {
     return a.nomAffiche.localeCompare(b.nomAffiche);
   });
   document.getElementById('recap-tbody').innerHTML = sorted.length === 0
-    ? '<tr><td colspan="9" style="text-align:center;color:var(--texte3);padding:32px">Aucun résultat</td></tr>'
+    ? '<tr><td colspan="10" style="text-align:center;color:var(--texte3);padding:32px">Aucun résultat</td></tr>'
     : sorted.map(c => `
       <tr class="${c.alerte ? 'alerte-row' : ''}">
         <td><strong>${c.nomAffiche}</strong></td>
