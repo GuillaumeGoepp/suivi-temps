@@ -915,43 +915,29 @@ function renderSaisies(jours, collabId) {
       + totalSem.toFixed(2) + 'h</td>'
       + '</tr>';
 
+  const fmtDP = s => { const p=(s||'').split('/'); if(p.length!==3) return s; const JOURS=['Lun.','Mar.','Mer.','Jeu.','Ven.','Sam.','Dim.']; const d=new Date(p[2],p[1]-1,p[0]); return JOURS[(d.getDay()+6)%7]+' '+p[0]+'/'+p[1]; };
     sem.jours.forEach(j => {
       const cren = (d, f) => (fmtHeure(d) && fmtHeure(f)) ? fmtHeure(d)+' → '+fmtHeure(f) : '—';
       const prog = j.totalHebdoProg != null && j.totalHebdoProg !== '' ? Number(j.totalHebdoProg).toFixed(2)+'h' : '—';
-      rows += '<tr>'
-        + td('<strong>'+(j.dateJour||'—')+'</strong><div style="font-size:11px;color:var(--texte3)">'+(j.jourSemaine||'')+'</div>', 'white-space:nowrap')
+      const _pD = (j.dateJour||'').split('/');
+      const _dD = _pD.length===3 ? new Date(_pD[2],_pD[1]-1,_pD[0]) : new Date(j.dateJour);
+      const _dow = _dD.getDay();
+      const bgW = _dow===6 ? 'background:#fff8f0;' : _dow===0 ? 'background:#fff0f0;' : '';
+      rows += '<tr style="'+bgW+'">'
+        + td('<strong>'+fmtDP(j.dateJour)+'</strong>', 'white-space:nowrap')
         + td(typeBadge(j.typeJour))
         + td(cren(j.c1Debut,j.c1Fin), 'font-family:monospace;font-size:12px;white-space:nowrap')
         + td(cren(j.c2Debut,j.c2Fin), 'font-family:monospace;font-size:12px;white-space:nowrap')
         + td(cren(j.c3Debut,j.c3Fin), 'font-family:monospace;font-size:12px;white-space:nowrap')
         + td('<span style="font-family:monospace;font-weight:600;color:var(--bleu)">'+(j.totalHeures!=null&&j.totalHeures!==''?Number(j.totalHeures).toFixed(2)+'h':'—')+'</span>')
         + td('<span style="font-size:11px;color:var(--texte3)">↗ '+prog+'</span> <span style="font-size:12px;color:var(--texte2)">'+(j.commentaire||'').replace(/</g,'&lt;')+'</span>')
-        + '</tr>';
-    });
-  });
-
   body.innerHTML = '<table style="width:100%;border-collapse:collapse;font-size:13px"><thead style="position:sticky;top:-1px;z-index:2;box-shadow:0 1px 0 #e8f0f8"><tr>'
-    + th('Date') + th('Type') + th('Créneau 1') + th('Créneau 2') + th('Créneau 3') + th('Jour') + th('Cumul sem.') + th('Commentaire')
+    + th('Date') + th('Type') + th('Créneau 1') + th('Créneau 2') + th('Créneau 3') + th('Jour') + th('Cumul sem.')
     + '</tr></thead><tbody>'
-    + jours.map(j => {
-        const cren = (d, f) => (fmtHeure(d) && fmtHeure(f)) ? fmtHeure(d)+' → '+fmtHeure(f) : '—';
-        const prog = j.totalHebdoProg != null && j.totalHebdoProg !== '' ? Number(j.totalHebdoProg).toFixed(2)+'h' : '—';
-        return '<tr>'
-          + td('<strong>'+(j.dateJour||'—')+'</strong><div style="font-size:11px;color:var(--texte3)">'+(j.jourSemaine||'')+'</div>', 'white-space:nowrap')
-          + td(typeBadge(j.typeJour))
-          + td(cren(j.c1Debut,j.c1Fin), 'font-family:monospace;font-size:12px;white-space:nowrap')
-          + td(cren(j.c2Debut,j.c2Fin), 'font-family:monospace;font-size:12px;white-space:nowrap')
-          + td(cren(j.c3Debut,j.c3Fin), 'font-family:monospace;font-size:12px;white-space:nowrap')
-          + td('<span style="font-family:monospace;font-weight:600;color:var(--bleu)">'+(j.totalHeures!=null&&j.totalHeures!==''?Number(j.totalHeures).toFixed(2)+'h':'—')+'</span>')
-          + td('<span style="font-family:monospace;color:var(--vert)">'+prog+'</span>')
-          + td('<span style="font-size:12px;color:var(--texte2)">'+(j.commentaire||'—').replace(/</g,'&lt;')+'</span>')
-          + '</tr>';
-      }).join('');
+    + rows
     + '</tbody></table>';
+  });
 }
-
-async function ouvrirSaisies(collabId, btn) {
-  const nomAffiche = btn.closest('tr').querySelector('td strong').textContent;
   document.getElementById('saisies-titre').textContent = 'Saisies — ' + nomAffiche;
   document.getElementById('saisies-body').innerHTML = '<div class="loader"><div class="spinner"></div>Chargement…</div>';
   document.getElementById('modal-saisies').classList.add('open');
