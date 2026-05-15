@@ -269,8 +269,9 @@ th.sort-desc::after { content: ' ↓'; opacity: 1; color: var(--bleu); }
             </div>
             <div style="display:flex;align-items:center;gap:10px">
               <span id="badge-validation-paie" style="font-size:13px"></span>
-              <input type="text" id="modal-note-admin" placeholder="Note admin…" style="width:220px;font-size:13px;padding:6px 10px">
-              <button class="btn btn-success btn-sm" id="btn-valider-collab" onclick="toggleValidationModal()">⬜ Valider</button>
+              <input type="text" id="modal-note-admin" placeholder="Note admin…" style="width:180px;font-size:13px;padding:6px 10px">
+              <button class="btn btn-secondary btn-sm" id="btn-debloquer-heures" onclick="toggleHeuresEdit()">✏️ Débloquer heures</button>
+              <button class="btn btn-success btn-sm" id="btn-valider-collab" onclick="toggleValidationModal()">✅ Valider</button>
             </div>
           </div>
         </div>
@@ -368,8 +369,9 @@ th.sort-desc::after { content: ' ↓'; opacity: 1; color: var(--bleu); }
             </div>
             <div style="display:flex;align-items:center;gap:10px">
               <span id="badge-validation-paie" style="font-size:13px"></span>
-              <input type="text" id="modal-note-admin" placeholder="Note admin…" style="width:220px;font-size:13px;padding:6px 10px">
-              <button class="btn btn-success btn-sm" id="btn-valider-collab" onclick="toggleValidationModal()">⬜ Valider</button>
+              <input type="text" id="modal-note-admin" placeholder="Note admin…" style="width:180px;font-size:13px;padding:6px 10px">
+              <button class="btn btn-secondary btn-sm" id="btn-debloquer-heures" onclick="toggleHeuresEdit()">✏️ Débloquer heures</button>
+              <button class="btn btn-success btn-sm" id="btn-valider-collab" onclick="toggleValidationModal()">✅ Valider</button>
             </div>
           </div>
         </div>
@@ -1041,13 +1043,18 @@ async function ouvrirSaisiesPaie(collabId, btn) {
   if (noteEl) noteEl.value = ligne ? (ligne.note_admin||'') : '';
   if (btnVal) {
     const valide = ligne && ligne.statut_validation==='valide';
-    btnVal.textContent = '✅ Valider';
-    btnVal.className = 'btn btn-success btn-sm';
+    window._paie_mode_edit = false;
+    window._paie_filtre_current = 'tous';
+    const btnDeb = document.getElementById('btn-debloquer-heures');
+    if (btnDeb) btnDeb.textContent = '✏️ Débloquer heures';
+    btnVal.textContent = valide ? '✅ Validé' : '✅ Valider';
+    btnVal.className = valide ? 'btn btn-secondary btn-sm' : 'btn btn-success btn-sm';
+    btnVal.disabled = valide;
     const badge = document.getElementById('badge-validation-paie');
     if (badge) {
       badge.innerHTML = valide
-        ? '<span class="badge badge-actif">✅ Validé</span>'
-        : '<span class="badge badge-attente">⏳ En attente</span>';
+        ? '<span style="background:#e8f8ee;color:#2d7a4f;padding:5px 14px;border-radius:20px;font-size:13px;font-weight:600">✅ Validé — lecture seule</span>'
+        : '<span style="background:#fff3e0;color:#c8833a;padding:5px 14px;border-radius:20px;font-size:13px;font-weight:600">⏳ En attente de validation</span>';
     }
   }
   // Afficher vue détail
@@ -1093,6 +1100,7 @@ function renderSaisiesPaie(jours, collabId) {
 }
 
 function filtrerSaisiesPaie(btn, filtre) {
+  window._paie_filtre_current = filtre;
   document.querySelectorAll('#filtres-paie .filter-btn').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
   document.getElementById('table-saisies-paie').innerHTML = buildTableSaisies(window._jours_paie_current, filtre, window._collab_paie_current);
@@ -1103,9 +1111,11 @@ function buildTableSaisies(jours, filtre, collabId) {
   if (!filtered.length) return '<div style="text-align:center;color:var(--texte3);padding:24px">Aucun jour pour ce filtre.</div>';
   const th = s => '<th style="text-align:left;padding:8px 10px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--texte3);border-bottom:1px solid #e8f0f8;background:#fafcff;white-space:nowrap">'+s+'</th>';
   const td = (c,x) => '<td style="padding:6px 10px;border-bottom:1px solid #f0f4f8;'+(x||'')+'">'+c+'</td>';
+  const modeEdit = window._paie_mode_edit || false;
   const types = ['travaillée','CP','AT'];
+  const fmtH = v => v && v!=='--:--' ? v : '—';
   return '<table style="width:100%;border-collapse:collapse;font-size:13px"><thead><tr>'
-    + th('Date')+th('Type')+th('Matin')+th('Après-midi')+th('Créneau 3')+th('Total')+th('Sem.')+th('Commentaire')+th('')
+    + th('Date')+th('Type')+th('Matin')+th('Après-midi')+th('Créneau 3')+th('Total')+th('Sem.')+th('Commentaire')
     + '</tr></thead><tbody>'
     + filtered.map((j, idx) => {
         const jourId = (j.jourId||'').replace(/'/g,'');
@@ -1140,6 +1150,20 @@ function buildTableSaisies(jours, filtre, collabId) {
           + '</td></tr>';
       }).join('')
     + '</tbody></table>';
+}
+
+function toggleHeuresEdit() {
+  window._paie_mode_edit = !window._paie_mode_edit;
+  const btn = document.getElementById('btn-debloquer-heures');
+  if (btn) btn.textContent = window._paie_mode_edit ? '🔒 Verrouiller' : '✏️ Débloquer heures';
+  document.getElementById('table-saisies-paie').innerHTML = buildTableSaisies(window._jours_paie_current, window._paie_filtre_current||'tous', window._collab_paie_current);
+}
+
+function toggleHeuresEdit() {
+  window._paie_mode_edit = !window._paie_mode_edit;
+  const btn = document.getElementById('btn-debloquer-heures');
+  if (btn) btn.textContent = window._paie_mode_edit ? '🔒 Verrouiller' : '✏️ Débloquer heures';
+  document.getElementById('table-saisies-paie').innerHTML = buildTableSaisies(window._jours_paie_current, window._paie_filtre_current||'tous', window._collab_paie_current);
 }
 
 function majTotalPaie(idx) {
