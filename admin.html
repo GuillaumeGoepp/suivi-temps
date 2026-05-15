@@ -951,7 +951,6 @@ function renderSaisies(jours, collabId) {
           + td('<span style="font-size:12px;color:var(--texte2)">'+(j.commentaire||'—').replace(/</g,'&lt;')+'</span>')
           + '</tr>';
       }).join('');
-      })())
     + '</tbody></table>';
 }
 
@@ -1099,6 +1098,7 @@ function buildTableSaisies(jours, filtre, collabId) {
           + td('<input type="text" id="jp'+idx+'-comm" value="'+(j.commentaire||'').replace(/"/g,"&quot;")+('" placeholder="Commentaire…" style="width:140px;font-size:12px;padding:3px 6px">'))
           + '</tr>';
       }).join('')
+      })()
     + '</tbody></table>';
 }
 
