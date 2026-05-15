@@ -931,6 +931,7 @@ function renderSaisies(jours, collabId) {
         + td(cren(j.c3Debut,j.c3Fin), 'font-family:monospace;font-size:12px;white-space:nowrap')
         + td('<span style="font-family:monospace;font-weight:600;color:var(--bleu)">'+(j.totalHeures!=null&&j.totalHeures!==''?Number(j.totalHeures).toFixed(2)+'h':'—')+'</span>')
         + td('<span style="font-size:11px;color:var(--texte3)">↗ '+prog+'</span> <span style="font-size:12px;color:var(--texte2)">'+(j.commentaire||'').replace(/</g,'&lt;')+'</span>')
+        + '</tr>';
   body.innerHTML = '<table style="width:100%;border-collapse:collapse;font-size:13px"><thead style="position:sticky;top:-1px;z-index:2;box-shadow:0 1px 0 #e8f0f8"><tr>'
     + th('Date') + th('Type') + th('Créneau 1') + th('Créneau 2') + th('Créneau 3') + th('Jour') + th('Cumul sem.')
     + '</tr></thead><tbody>'
