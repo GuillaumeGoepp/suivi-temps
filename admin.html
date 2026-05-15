@@ -136,6 +136,10 @@ th.sort-desc::after { content: ' ↓'; opacity: 1; color: var(--bleu); }
 .login-title { font-size: 22px; font-weight: 600; margin-bottom: 6px; }
 .login-sub { font-size: 13px; color: var(--texte3); margin-bottom: 28px; }
 .login-error { background: #fdecea; color: var(--rouge); border-radius: 8px; padding: 10px; font-size: 13px; margin-top: 12px; }
+
+.toggle-pill { display: inline-flex; background: #f0f4f8; border: 1.5px solid #dce6f0; border-radius: 999px; padding: 3px; gap: 2px; }
+.toggle-pill button { border: none; background: none; padding: 5px 14px; border-radius: 999px; font-size: 13px; cursor: pointer; color: #6b7c93; transition: all 0.15s; font-weight: 500; }
+.toggle-pill button.pill-active { background: #fff; color: #1a6eb5; border: 1px solid #b0c4d8; font-weight: 600; }
 </style>
 </head>
 <body>
@@ -269,7 +273,7 @@ th.sort-desc::after { content: ' ↓'; opacity: 1; color: var(--bleu); }
             </div>
             <div style="display:flex;align-items:center;gap:12px">
               <span id="badge-validation-paie"></span>
-              <button id="btn-switch-mode" onclick="toggleHeuresEdit()" style="font-size:13px;font-weight:600;padding:6px 14px;border-radius:8px;border:2px solid #b0c4d8;background:#f0f4f8;color:#4a6fa5;cursor:pointer">👁 Consultation</button>
+              <div class="toggle-pill" id="toggle-mode"><button class="pill-active" onclick="toggleHeuresEdit()" id="btn-pill-consult">👁 Consultation</button><button onclick="toggleHeuresEdit()" id="btn-pill-modif">✏️ Modification</button></div>
               <input type="text" id="modal-note-admin" placeholder="Note admin…" style="width:160px;font-size:13px;padding:6px 10px">
               <button class="btn btn-success btn-sm" id="btn-valider-collab" onclick="toggleValidationModal()" style="font-weight:600;padding:6px 18px">✅ Valider</button>
             </div>
@@ -369,7 +373,7 @@ th.sort-desc::after { content: ' ↓'; opacity: 1; color: var(--bleu); }
             </div>
             <div style="display:flex;align-items:center;gap:12px">
               <span id="badge-validation-paie"></span>
-              <button id="btn-switch-mode" onclick="toggleHeuresEdit()" style="font-size:13px;font-weight:600;padding:6px 14px;border-radius:8px;border:2px solid #b0c4d8;background:#f0f4f8;color:#4a6fa5;cursor:pointer">👁 Consultation</button>
+              <div class="toggle-pill" id="toggle-mode"><button class="pill-active" onclick="toggleHeuresEdit()" id="btn-pill-consult">👁 Consultation</button><button onclick="toggleHeuresEdit()" id="btn-pill-modif">✏️ Modification</button></div>
               <input type="text" id="modal-note-admin" placeholder="Note admin…" style="width:160px;font-size:13px;padding:6px 10px">
               <button class="btn btn-success btn-sm" id="btn-valider-collab" onclick="toggleValidationModal()" style="font-weight:600;padding:6px 18px">✅ Valider</button>
             </div>
@@ -1047,13 +1051,9 @@ async function ouvrirSaisiesPaie(collabId, btn) {
     const valide = ligne && ligne.statut_validation==='valide';
     window._paie_mode_edit = false;
     window._paie_filtre_current = 'tous';
-    const btnSwitch = document.getElementById('btn-switch-mode');
-    if (btnSwitch) {
-      btnSwitch.textContent = '👁 Consultation';
-      btnSwitch.style.background = '#f0f4f8';
-      btnSwitch.style.color = '#4a6fa5';
-      btnSwitch.style.borderColor = '#b0c4d8';
-    }
+    const btnC = document.getElementById('btn-pill-consult');
+    const btnM = document.getElementById('btn-pill-modif');
+    if (btnC && btnM) { btnC.classList.add('pill-active'); btnM.classList.remove('pill-active'); }
     btnVal.textContent = '✅ Valider';
     btnVal.style.opacity = valide ? '0.45' : '1';
     btnVal.disabled = valide;
