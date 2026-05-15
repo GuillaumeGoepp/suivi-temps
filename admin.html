@@ -1130,33 +1130,27 @@ function buildTableSaisies(jours, filtre, collabId) {
         const typeSelect = '<select id="jp'+idx+'-type" onchange="majTotalPaie('+idx+')" style="font-size:12px;padding:3px 6px;border-radius:6px;border:1.5px solid #dce6f0">'
           + types.map(t => '<option value="'+t+'"'+(j.typeJour===t?' selected':'')+'>'+t+'</option>').join('')
           + '</select>';
-        const timeInput = (id, val) => '<input type="time" id="'+id+'" value="'+fmtHeure(val)+'" onchange="majTotalPaie('+idx+')" style="width:55px;font-size:12px;padding:3px 4px">';
         const _pDate = (j.dateJour||'').split('/');
         const _dDate = _pDate.length===3 ? new Date(_pDate[2],_pDate[1]-1,_pDate[0]) : new Date(j.dateJour);
         const _dow = _dDate.getDay();
         const bgWeekend = _dow===6 ? 'background:#fff8f0;' : _dow===0 ? 'background:#fff0f0;' : '';
-        return '<tr id="jpr-'+idx+'" style="'+bgWeekend+'">'
+        const creneauTxt = (d,f) => '<span style="font-family:monospace;font-size:12px">'+fmtH(d)+' → '+fmtH(f)+'</span>';
+        const creneauInput = (i1,v1,i2,v2) => '<div style="display:flex;align-items:center;gap:4px"><input type="time" id="'+i1+'" value="'+fmtHeure(v1)+'" onchange="majTotalPaie('+idx+')" style="width:55px;font-size:12px;padding:3px 4px"> <span style="color:var(--texte3)">→</span> <input type="time" id="'+i2+'" value="'+fmtHeure(v2)+'" onchange="majTotalPaie('+idx+')" style="width:55px;font-size:12px;padding:3px 4px"></div>';
+        const matin = modeEdit ? creneauInput('jp'+idx+'-c1d',j.c1Debut,'jp'+idx+'-c1f',j.c1Fin) : creneauTxt(j.c1Debut,j.c1Fin);
+        const aprem = modeEdit ? creneauInput('jp'+idx+'-c2d',j.c2Debut,'jp'+idx+'-c2f',j.c2Fin) : creneauTxt(j.c2Debut,j.c2Fin);
+        const cren3 = modeEdit ? creneauInput('jp'+idx+'-c3d',j.c3Debut,'jp'+idx+'-c3f',j.c3Fin) : creneauTxt(j.c3Debut,j.c3Fin);
+        return '<tr id="jpr-'+idx+'" style="'+bgWeekend+'">' 
           + td('<strong>'+fmtDP(j.dateJour)+'</strong>','white-space:nowrap')
           + td(typeSelect)
-          + td('<div style="display:flex;align-items:center;gap:4px">'+timeInput('jp'+idx+'-c1d',j.c1Debut)+' <span style="color:var(--texte3)">→</span> '+timeInput('jp'+idx+'-c1f',j.c1Fin)+'</div>','white-space:nowrap')
-          + td('<div style="display:flex;align-items:center;gap:4px">'+timeInput('jp'+idx+'-c2d',j.c2Debut)+' <span style="color:var(--texte3)">→</span> '+timeInput('jp'+idx+'-c2f',j.c2Fin)+'</div>','white-space:nowrap')
-          + td('<div style="display:flex;align-items:center;gap:4px">'+timeInput('jp'+idx+'-c3d',j.c3Debut)+' <span style="color:var(--texte3)">→</span> '+timeInput('jp'+idx+'-c3f',j.c3Fin)+'</div>','white-space:nowrap')
+          + td(matin,'white-space:nowrap')
+          + td(aprem,'white-space:nowrap')
+          + td(cren3,'white-space:nowrap')
           + td('<span id="jptot-'+idx+'" style="font-family:monospace;font-weight:600;color:var(--bleu)">'+tot+'</span>')
           + td('<span style="font-size:11px;color:var(--texte3)">'+semTot+'</span>')
-          + td('<input type="text" id="jp'+idx+'-comm" value="'+(j.commentaire||'').replace(/"/g,'&quot;')+'" placeholder="Commentaire…" style="width:120px;font-size:12px;padding:3px 6px">')
-          + '<td style="padding:6px 10px;border-bottom:1px solid #f0f4f8">'
-          + '<button class="btn btn-primary btn-sm" onclick="sauverJourPaie('+idx+',\''+jourId+'\',\''+collabId+'\')">💾</button>'
-          + '<div class="save-msg" id="jpmsg-'+idx+'"></div>'
-          + '</td></tr>';
+          + td('<input type="text" id="jp'+idx+'-comm" value="'+(j.commentaire||'').replace(/"/g,"&quot;")+('" placeholder="Commentaire…" style="width:140px;font-size:12px;padding:3px 6px">'))
+          + '</tr>';
       }).join('')
     + '</tbody></table>';
-}
-
-function toggleHeuresEdit() {
-  window._paie_mode_edit = !window._paie_mode_edit;
-  const btn = document.getElementById('btn-debloquer-heures');
-  if (btn) btn.textContent = window._paie_mode_edit ? '🔒 Verrouiller' : '✏️ Débloquer heures';
-  document.getElementById('table-saisies-paie').innerHTML = buildTableSaisies(window._jours_paie_current, window._paie_filtre_current||'tous', window._collab_paie_current);
 }
 
 function toggleHeuresEdit() {
