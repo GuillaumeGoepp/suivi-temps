@@ -629,6 +629,29 @@
     .drum-spacer {
         height: 84px;
     }
+    #toast-msg {
+        position: fixed;
+        bottom: 90px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: var(--texte);
+        color: var(--blanc);
+        padding: 10px 20px;
+        border-radius: 20px;
+        font-size: 14px;
+        font-weight: 500;
+        z-index: 9999;
+        opacity: 0;
+        transition: opacity .3s;
+        pointer-events: none;
+        white-space: nowrap;
+    }
+    #toast-msg.warn {
+        background: var(--rouge);
+    }
+    #toast-msg.show {
+        opacity: 1;
+    }
     </style>
 </head>
 <body>
@@ -708,6 +731,7 @@
               
         </button>
     </nav>
+    <div id="toast-msg"></div>
     <div id="picker-overlay" onclick="cancelPicker()"></div>
     <div id="picker-popup">
         <div class="picker-head">
@@ -924,31 +948,48 @@
             c3Fin: getTimeVal('c3-fin'),
             commentaire: document.getElementById('commentaire').value
         };
+        jourData = {
+            ...jourData,
+            ...payload,
+            totalHeures: calculTotal(payload),
+            verrouillee: false
+        };
+        showVue('journee');
+        renderJournee();
+        showToast('✓ Enregistré');
+        mesJoursCache = null;
+        const timeoutId = setTimeout(() => {
+            showToast('⚠️ Connexion lente — vérifiez votre réseau', true);
+        }, 8000);
         try {
             const params = Object.entries(payload).map(([k, v]) => k + '=' + encodeURIComponent(v)).join('&');
             const d = await jsonpFetch(API_URL + '?action=saveHoraires&' + params);
+            clearTimeout(timeoutId);
             if (!d.ok) {
-                errBox.textContent = d.error || 'Erreur.';
-                errBox.style.display = 'block';
+                showToast('⚠️ ' + (d.error || 'Erreur serveur'), true);
                 resetBtn();
                 return;
             }
             jourData = {
                 ...jourData,
-                ...payload,
                 nbModifications: d.nbModifications,
                 totalHeures: calculTotal(payload),
-                verrouillee: false
             };
-            showVue('journee');
             renderJournee();
-            mesJoursCache = null;
             prefetchMesJours();
         } catch (e) {
-            errBox.textContent = e.message || 'Erreur.';
-            errBox.style.display = 'block';
+            clearTimeout(timeoutId);
+            showToast('⚠️ Erreur réseau — réessayez', true);
             resetBtn();
         }
+    }
+    let _toastTimer = null;
+    function showToast(msg, warn = false) {
+        const t = document.getElementById('toast-msg');
+        t.textContent = msg;
+        t.className = warn ? 'warn show' : 'show';
+        if (_toastTimer) clearTimeout(_toastTimer);
+        _toastTimer = setTimeout(() => { t.className = t.className.replace('show','').trim(); }, 3000);
     }
     async function prefetchMesJours() {
         try {
