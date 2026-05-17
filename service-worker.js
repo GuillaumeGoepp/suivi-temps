@@ -1,14 +1,10 @@
-const CACHE_NAME = 'cdt-suivi-v1';
-const ASSETS = [
-  '/',
-  '/index.html',
-  'https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=DM+Mono:wght@500&display=swap'
+const CACHE_NAME = 'cdt-suivi-v2';
+const ASSETS_TO_CACHE = [
+  'https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=DM+Mono:wght@500&display=swap',
+  'https://fonts.gstatic.com'
 ];
 
 self.addEventListener('install', e => {
-  e.waitUntil(
-    caches.open(CACHE_NAME).then(cache => cache.addAll(ASSETS))
-  );
   self.skipWaiting();
 });
 
@@ -22,8 +18,24 @@ self.addEventListener('activate', e => {
 });
 
 self.addEventListener('fetch', e => {
-  if (e.request.url.includes('script.google.com')) return;
-  e.respondWith(
-    caches.match(e.request).then(cached => cached || fetch(e.request))
-  );
+  const url = e.request.url;
+  
+  // Ne jamais intercepter les appels GAS
+  if (url.includes('script.google.com')) return;
+  
+  // Ne jamais intercepter index.html (pour préserver le token dans l'URL)
+  if (url.includes('index.html') || url.endsWith('/suivi-temps/') || url.endsWith('/suivi-temps/?')) return;
+  
+  // Cacher uniquement les polices Google
+  if (url.includes('fonts.googleapis.com') || url.includes('fonts.gstatic.com')) {
+    e.respondWith(
+      caches.match(e.request).then(cached => cached || 
+        fetch(e.request).then(response => {
+          const clone = response.clone();
+          caches.open(CACHE_NAME).then(cache => cache.put(e.request, clone));
+          return response;
+        })
+      )
+    );
+  }
 });
