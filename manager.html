@@ -139,18 +139,14 @@ input:focus { border-color: var(--bleu-clair); }
           <thead>
             <tr>
               <th>Collaborateur</th>
-              <th>Structure</th>
-              <th>Contrat</th>
               <th>H/sem</th>
-              <th>Heures saisies</th>
-              <th>Jours saisis</th>
-              <th>Jours manquants</th>
               <th>Dernière saisie</th>
-              <th>Saisies</th>
+              <th>Heures</th>
+              <th>Voir</th>
             </tr>
           </thead>
           <tbody id="recap-tbody">
-            <tr><td colspan="9"><div class="loader"><div class="spinner"></div></div></td></tr>
+            <tr><td colspan="5"><div class="loader"><div class="spinner"></div></div></td></tr>
           </tbody>
         </table>
       </div>
@@ -261,7 +257,7 @@ async function chargerPeriodes() {
 async function chargerRecap(periodeId) {
   recapPeriodeId = periodeId || '';
   document.getElementById('recap-stats').innerHTML = '<div class="loader"><div class="spinner"></div>Chargement…</div>';
-  document.getElementById('recap-tbody').innerHTML = '<tr><td colspan="9"><div class="loader"><div class="spinner"></div></div></td></tr>';
+  document.getElementById('recap-tbody').innerHTML = '<tr><td colspan="5"><div class="loader"><div class="spinner"></div></div></td></tr>';
   try {
     let url = API_URL + '?action=bo_getRecapManager&token=' + encodeURIComponent(MANAGER_TOKEN);
     if (periodeId) url += '&periodeId=' + encodeURIComponent(periodeId);
@@ -279,36 +275,16 @@ function afficherRecap(d) {
   }
   document.getElementById('recap-titre').textContent = 'Récap — ' + (d.periode ? d.periode.nomPeriode : 'période en cours');
   recapData = d.recap || [];
-  const totalH      = recapData.reduce((s,c) => s+c.totalHeures, 0);
-  const nbSaisis    = recapData.reduce((s,c) => s+c.nbSaisis, 0);
-  const nbManquants = recapData.reduce((s,c) => s+c.nbNonSaisis, 0);
-  document.getElementById('recap-stats').innerHTML = `
-    <div class="recap-grid">
-      <div class="stat-card"><div class="stat-num">${totalH.toFixed(1)}h</div><div class="stat-lbl">Heures totales</div></div>
-      <div class="stat-card"><div class="stat-num">${recapData.length}</div><div class="stat-lbl">Collaborateurs</div></div>
-      <div class="stat-card"><div class="stat-num">${nbSaisis}</div><div class="stat-lbl">Jours saisis</div></div>
-      <div class="stat-card" style="${nbManquants>0?'background:var(--orange-pale)':''}">
-        <div class="stat-num" style="${nbManquants>0?'color:var(--orange)':''}">${nbManquants}</div>
-        <div class="stat-lbl">Jours manquants</div>
-      </div>
-    </div>`;
-  const sorted = [...recapData].sort((a, b) => {
-    if (a.alerte && !b.alerte) return -1;
-    if (!a.alerte && b.alerte) return 1;
-    return a.nomAffiche.localeCompare(b.nomAffiche);
-  });
+  document.getElementById('recap-stats').style.display = 'none';
+  const sorted = [...recapData].sort((a, b) => a.nomAffiche.localeCompare(b.nomAffiche));
   document.getElementById('recap-tbody').innerHTML = sorted.length === 0
-    ? '<tr><td colspan="9" style="text-align:center;color:var(--texte3);padding:32px">Aucun collaborateur dans cette équipe.</td></tr>'
+    ? '<tr><td colspan="5" style="text-align:center;color:var(--texte3);padding:32px">Aucun collaborateur dans cette équipe.</td></tr>'
     : sorted.map(c => `
-      <tr class="${c.alerte ? 'alerte-row' : ''}">
+      <tr>
         <td><strong>${c.nomAffiche}</strong></td>
-        <td>${c.structure || '—'}</td>
-        <td>${c.typeContrat || '—'}</td>
         <td>${c.heuresHebdo ? c.heuresHebdo + 'h' : '—'}</td>
-        <td><span style="font-family:monospace;font-weight:500">${c.totalHeures.toFixed(2)}h</span></td>
-        <td>${c.nbSaisis}</td>
-        <td>${c.nbNonSaisis > 0 ? '<span class="alerte-badge">⚠️ ' + c.nbNonSaisis + '</span>' : '<span style="color:var(--vert)">✓ 0</span>'}</td>
         <td style="font-size:13px;color:var(--texte2)">${fmtDate(c.derniereSaisie) || '—'}</td>
+        <td><span style="font-family:monospace;font-weight:500">${c.totalHeures.toFixed(2)}h</span></td>
         <td><button class="btn btn-warning btn-sm" onclick="ouvrirSaisies('${c.collabId}', this)">📋 Voir</button></td>
       </tr>`).join('');
 }
@@ -353,7 +329,7 @@ function renderSaisies(jours, collabId) {
   body.innerHTML = '<table style="width:100%;border-collapse:collapse;font-size:13px"><thead><tr>'
     + th('Date') + th('Type') + th('Créneau 1') + th('Créneau 2') + th('Créneau 3') + th('Total') + th('Commentaire') + th('Remarque responsable')
     + '</tr></thead><tbody>'
-    + jours.filter(j => (j.totalHeures && Number(j.totalHeures) > 0) || j.typeJour === 'CP' || j.typeJour === 'AT' || j.typeJour === 'conge' || j.typeJour === 'absence').map((j, idx) => {
+    + [...jours].reverse().filter(j => (j.totalHeures && Number(j.totalHeures) > 0) || j.typeJour === 'CP' || j.typeJour === 'AT' || j.typeJour === 'conge' || j.typeJour === 'absence').map((j, idx) => {
         const jourId = (j.jourId||'').replace(/'/g,'');
         const vide = !j.typeJour;
         const cren = (d, f) => (fmtHeure(d) && fmtHeure(f)) ? fmtHeure(d)+' → '+fmtHeure(f) : '—';
