@@ -747,7 +747,9 @@
         </div>
     </div>
     <script>
-    const COLLAB_ID = new URLSearchParams(location.search).get('id') || '';
+    const _urlToken = new URLSearchParams(location.search).get('id') || '';
+    if (_urlToken) localStorage.setItem('cdt_token', _urlToken);
+    const COLLAB_ID = _urlToken || localStorage.getItem('cdt_token') || '';
     const API_URL = 'https://script.google.com/macros/s/AKfycbx1BTyA9scZnOy7cFKoif9KuV_PuEmotXtO5yCheB-IUESExdG5v5l3maZ-Wn-XBowwbg/exec';
     function jsonpFetch(url) {
         return new Promise((resolve, reject) => {
@@ -779,7 +781,22 @@
     }
     async function loadJourDuJour() {
         if (!COLLAB_ID) {
-            document.getElementById('journee-content').innerHTML = '<div class="error-box">Lien invalide — contacte ton responsable.</div>';
+            // Afficher écran de saisie du token
+            document.getElementById('journee-content').innerHTML = `
+              <div style="padding:32px 24px;text-align:center">
+                <div style="font-size:48px;margin-bottom:16px">🌱</div>
+                <div style="font-size:20px;font-weight:600;color:var(--texte);margin-bottom:8px">Bienvenue !</div>
+                <div style="font-size:15px;color:var(--texte2);margin-bottom:24px">Entrez votre code d'accès<br>pour continuer</div>
+                <input type="text" id="input-token" placeholder="Code d'accès" maxlength="20"
+                  style="width:100%;padding:14px 16px;font-size:18px;font-family:DM Mono,monospace;text-align:center;border:2px solid var(--vert-pale);border-radius:12px;outline:none;letter-spacing:.1em;margin-bottom:12px">
+                <button onclick="
+                  const t = document.getElementById('input-token').value.trim();
+                  if(t){ localStorage.setItem('cdt_token', t); location.href = location.pathname + '?id=' + t; }
+                " style="width:100%;padding:14px;background:var(--vert);color:white;border:none;border-radius:12px;font-size:16px;font-weight:600;font-family:DM Sans,sans-serif;cursor:pointer">
+                  Accéder
+                </button>
+                <div style="font-size:13px;color:var(--texte3);margin-top:16px">Votre code vous a été envoyé par votre responsable</div>
+              </div>`;
             return;
         }
         try {
