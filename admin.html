@@ -759,18 +759,19 @@ async function sauverCollab() {
   }
   try {
     const url = API_URL + '?' + Object.entries(params).map(([k,v]) => k+'='+encodeURIComponent(v)).join('&');
-    fermerModal();
-    chargerCollabs();
     const d = await jsonpFetch(url);
     if (!d.ok) {
-      alert('⚠️ Erreur : ' + (d.error||'inconnue'));
+      errBox.textContent = d.error||'Erreur.';
+      errBox.style.display = 'block';
+      btn.disabled = false; btn.textContent = 'Enregistrer';
       return;
     }
     if (d.action === 'created' && d.lien) {
       navigator.clipboard.writeText(d.lien).catch(()=>{});
       alert('✓ Collaborateur créé !\n\nLien copié :\n' + d.lien);
-      chargerCollabs();
     }
+    fermerModal();
+    chargerCollabs();
   } catch(e) {
     errBox.textContent = 'Erreur réseau.';
     errBox.style.display = 'block';
