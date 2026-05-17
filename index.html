@@ -1197,7 +1197,7 @@
 <script>
   // PWA — enregistrement service worker
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('/suivi-temps/service-worker.js')
+    navigator.serviceWorker.register('/suivi-temps/service-worker.js', {scope: '/suivi-temps/'})
       .then(() => console.log('SW enregistré'))
       .catch(e => console.warn('SW erreur', e));
   }
