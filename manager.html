@@ -124,13 +124,7 @@ input:focus { border-color: var(--bleu-clair); }
   <div class="main">
     <div class="card" style="margin-bottom:20px">
       <div class="card-header">
-        <span class="card-title" id="recap-titre">Récapitulatif — période en cours</span>
-        <select id="recap-periode-select" onchange="chargerRecap(this.value)" style="font-size:13px;padding:6px 10px;border-radius:8px;border:1.5px solid #dce6f0;">
-          <option value="">Période en cours</option>
-        </select>
-      </div>
-      <div class="card-body" id="recap-stats">
-        <div class="loader"><div class="spinner"></div>Chargement…</div>
+        <span class="card-title" id="recap-titre">Mon équipe — 30 derniers jours</span>
       </div>
     </div>
     <div class="card">
@@ -172,6 +166,7 @@ const API_URL = 'https://script.google.com/macros/s/AKfycbx1BTyA9scZnOy7cFKoif9K
 let MANAGER_TOKEN = new URLSearchParams(location.search).get('token') || '';
 let recapData = [];
 let recapPeriodeId = '';
+let equipeCollabs = [];
 
 function fmtDate(d) {
   if (!d || d === '—' || d === '') return '—';
@@ -229,8 +224,7 @@ async function login() {
     }
     document.getElementById('login-screen').style.display = 'none';
     document.getElementById('app').style.display = 'block';
-    chargerPeriodes();
-    afficherRecap(d);
+    charger30j();
   } catch(e) {
     document.getElementById('login-error').textContent = 'Erreur réseau.';
     document.getElementById('login-error').style.display = 'block';
@@ -239,46 +233,21 @@ async function login() {
 
 if (MANAGER_TOKEN) { document.getElementById('login-token').value = MANAGER_TOKEN; login(); }
 
-async function chargerPeriodes() {
-  try {
-    const d = await jsonpFetch(API_URL + '?action=bo_getPeriodes&token=' + encodeURIComponent(MANAGER_TOKEN));
-    if (!d.ok) return;
-    const sel = document.getElementById('recap-periode-select');
-    sel.innerHTML = '<option value="">Période en cours</option>';
-    d.periodes.forEach(p => {
-      const o = document.createElement('option');
-      o.value = p.periodeId;
-      o.textContent = p.nomPeriode + ' (' + p.statut + ')';
-      sel.appendChild(o);
-    });
-  } catch(e) {}
-}
-
-async function chargerRecap(periodeId) {
-  recapPeriodeId = periodeId || '';
-  document.getElementById('recap-stats').innerHTML = '<div class="loader"><div class="spinner"></div>Chargement…</div>';
+async function charger30j() {
   document.getElementById('recap-tbody').innerHTML = '<tr><td colspan="5"><div class="loader"><div class="spinner"></div></div></td></tr>';
   try {
-    let url = API_URL + '?action=bo_getRecapManager&token=' + encodeURIComponent(MANAGER_TOKEN);
-    if (periodeId) url += '&periodeId=' + encodeURIComponent(periodeId);
-    const d = await jsonpFetch(url);
+    const d = await jsonpFetch(API_URL + '?action=bo_getJoursEquipe30j&token=' + encodeURIComponent(MANAGER_TOKEN));
     if (!d.ok) return;
-    afficherRecap(d);
+    document.getElementById('header-equipe').textContent = d.equipeNom || 'Mon équipe';
+    equipeCollabs = d.collabs || [];
+    const sorted = [...equipeCollabs].sort((a, b) => a.nomAffiche.localeCompare(b.nomAffiche));
+    document.getElementById('recap-tbody').innerHTML = sorted.length === 0
+      ? '<tr><td colspan="5" style="text-align:center;color:var(--texte3);padding:32px">Aucun collaborateur dans cette équipe.</td></tr>'
+      : sorted.map(c => '<tr><td><strong>'+c.nomAffiche+'</strong></td><td>'+(c.heuresHebdo?c.heuresHebdo+'h':'—')+'</td><td style="font-size:13px;color:var(--texte2)">'+(c.derniereSaisie||'—')+'</td><td><span style="font-family:monospace;font-weight:500">'+Number(c.totalHeures).toFixed(2)+'h</span></td><td><button class="btn btn-warning btn-sm" onclick="ouvrirSaisies(''+c.collabId+'', this)">Voir</button></td></tr>').join('');
   } catch(e) {
-    document.getElementById('recap-stats').innerHTML = '<div class="error-banner">Erreur de chargement.</div>';
+    document.getElementById('recap-tbody').innerHTML = '<tr><td colspan="5" style="color:var(--rouge);padding:24px">Erreur réseau.</td></tr>';
   }
 }
-
-function afficherRecap(d) {
-  if (d.recap && d.recap.length > 0) {
-    document.getElementById('header-equipe').textContent = d.recap[0].equipeNom || 'Mon équipe';
-  }
-  document.getElementById('recap-titre').textContent = 'Récap — ' + (d.periode ? d.periode.nomPeriode : 'période en cours');
-  recapData = d.recap || [];
-  document.getElementById('recap-stats').style.display = 'none';
-  const sorted = [...recapData].sort((a, b) => a.nomAffiche.localeCompare(b.nomAffiche));
-  document.getElementById('recap-tbody').innerHTML = sorted.length === 0
-    ? '<tr><td colspan="5" style="text-align:center;color:var(--texte3);padding:32px">Aucun collaborateur dans cette équipe.</td></tr>'
     : sorted.map(c => `
       <tr>
         <td><strong>${c.nomAffiche}</strong></td>
@@ -293,24 +262,12 @@ function fermerSaisies() {
   document.getElementById('modal-saisies').classList.remove('open');
 }
 
-async function ouvrirSaisies(collabId, btn) {
+function ouvrirSaisies(collabId, btn) {
   const nomAffiche = btn.closest('tr').querySelector('td strong').textContent;
   document.getElementById('saisies-titre').textContent = 'Saisies — ' + nomAffiche;
-  document.getElementById('saisies-body').innerHTML = '<div class="loader"><div class="spinner"></div>Chargement…</div>';
   document.getElementById('modal-saisies').classList.add('open');
-  try {
-    let url = API_URL + '?action=bo_getJoursCollab&token=' + encodeURIComponent(MANAGER_TOKEN)
-            + '&collabId=' + encodeURIComponent(collabId);
-    if (recapPeriodeId) url += '&periodeId=' + encodeURIComponent(recapPeriodeId);
-    const d = await jsonpFetch(url);
-    if (!d.ok) {
-      document.getElementById('saisies-body').innerHTML = '<div class="error-banner">Erreur lors du chargement.</div>';
-      return;
-    }
-    renderSaisies(d.jours || [], collabId);
-  } catch(e) {
-    document.getElementById('saisies-body').innerHTML = '<div class="error-banner">Erreur réseau.</div>';
-  }
+  const collab = equipeCollabs.find(c => c.collabId === collabId);
+  renderSaisies(collab ? collab.jours : [], collabId);
 }
 
 function renderSaisies(jours, collabId) {
@@ -327,9 +284,9 @@ function renderSaisies(jours, collabId) {
   const th = s => '<th style="text-align:left;padding:8px 10px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--texte3);border-bottom:1px solid #e8f0f8;background:#fafcff;white-space:nowrap">'+s+'</th>';
   const td = (content, extra) => '<td style="padding:8px 10px;border-bottom:1px solid #f0f4f8;'+(extra||'')+'">'+content+'</td>';
   body.innerHTML = '<table style="width:100%;border-collapse:collapse;font-size:13px"><thead><tr>'
-    + th('Date') + th('Type') + th('Créneau 1') + th('Créneau 2') + th('Créneau 3') + th('Total') + th('Commentaire') + th('Remarque responsable')
+    + th('Date') + th('Type') + th('Créneau 1') + th('Créneau 2') + th('Créneau 3') + th('Total') + th('Cumul sem.') + th('Commentaire') + th('Remarque responsable')
     + '</tr></thead><tbody>'
-    + [...jours].reverse().filter(j => (j.totalHeures && Number(j.totalHeures) > 0) || j.typeJour === 'CP' || j.typeJour === 'AT' || j.typeJour === 'conge' || j.typeJour === 'absence').map((j, idx) => {
+    + jours.filter(j => (j.totalHeures && Number(j.totalHeures) > 0) || j.typeJour === 'CP' || j.typeJour === 'AT' || j.typeJour === 'conge' || j.typeJour === 'absence').map((j, idx) => {
         const jourId = (j.jourId||'').replace(/'/g,'');
         const vide = !j.typeJour;
         const cren = (d, f) => (fmtHeure(d) && fmtHeure(f)) ? fmtHeure(d)+' → '+fmtHeure(f) : '—';
@@ -342,6 +299,7 @@ function renderSaisies(jours, collabId) {
           + td(cren(j.c2Debut,j.c2Fin), 'font-family:monospace;font-size:12px;white-space:nowrap')
           + td(cren(j.c3Debut,j.c3Fin), 'font-family:monospace;font-size:12px;white-space:nowrap')
           + td('<span style="font-family:monospace;font-weight:600;color:var(--bleu)">'+(j.totalHeures!=null&&j.totalHeures!==''?Number(j.totalHeures).toFixed(2)+'h':'—')+'</span>')
+          + td('<span style="font-family:monospace;font-size:12px;color:var(--texte3)">'+(j.totalHebdoProg!=null&&j.totalHebdoProg!==''?j.totalHebdoProg+'h':'—')+'</span>')
           + td('<span style="font-size:12px;color:var(--texte2)">'+(j.commentaire||'—').replace(/</g,'&lt;')+'</span>')
           + '<td style="padding:6px 10px;border-bottom:1px solid #f0f4f8">'
           + '<div style="display:flex;align-items:center;gap:6px">'
