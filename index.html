@@ -660,6 +660,7 @@
     <div class="header">
         <div class="header-company" id="hdr-company">Chants de la Terre</div>
         <div class="header-name" id="hdr-name">…</div>
+        <a id="btn-mon-equipe" href="#" style="display:none;margin-top:10px;align-items:center;gap:6px;background:rgba(255,255,255,.15);border-radius:20px;padding:5px 12px;font-size:13px;color:white;text-decoration:none;">👥 Mon équipe</a>
         <div class="header-date" id="hdr-date">…</div>
         <div class="header-badge" id="hdr-periode">…</div>
     </div>
@@ -757,6 +758,8 @@
     const _urlToken = new URLSearchParams(location.search).get('id') || '';
     if (_urlToken) { setCookie('cdt_token', _urlToken); localStorage.setItem('cdt_token', _urlToken); }
     const COLLAB_ID = _urlToken || getCookie('cdt_token') || localStorage.getItem('cdt_token') || '';
+    let COLLAB_ROLE = '';
+    let COLLAB_EQUIPE_ID = '';
     const API_URL = 'https://script.google.com/macros/s/AKfycbx1BTyA9scZnOy7cFKoif9KuV_PuEmotXtO5yCheB-IUESExdG5v5l3maZ-Wn-XBowwbg/exec';
     function jsonpFetch(url) {
         return new Promise((resolve, reject) => {
@@ -816,6 +819,12 @@
             jourData = d.jour;
             document.getElementById('hdr-name').textContent = (d.collab && d.collab.nomAffiche) || '';
             document.getElementById('hdr-company').textContent = d.employeur || 'Chants de la Terre';
+            COLLAB_ROLE = (d.collab && d.collab.role) || 'collab';
+            COLLAB_EQUIPE_ID = (d.collab && d.collab.equipeId) || '';
+            if (COLLAB_ROLE === 'responsable' && COLLAB_EQUIPE_ID) {
+              const btnEquipe = document.getElementById('btn-mon-equipe');
+              if (btnEquipe) { btnEquipe.style.display = 'flex'; btnEquipe.href = 'https://chantsdelaterre.github.io/suivi-temps/manager.html?token=' + COLLAB_EQUIPE_ID; }
+            }
             document.getElementById('hdr-periode').textContent = d.jour && d.jour.periodeId ? 'Période en cours' : 'Période en cours';
             renderJournee();
         } catch (e) {
