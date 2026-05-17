@@ -37,7 +37,7 @@ html, body { font-family: 'DM Sans', sans-serif; background: var(--fond); color:
 .tab { padding: 14px 20px; font-size: 14px; font-weight: 500; color: var(--texte3); cursor: pointer; border-bottom: 2px solid transparent; transition: all .15s; user-select: none; }
 .tab:hover { color: var(--bleu-clair); }
 .tab.active { color: var(--bleu); border-bottom-color: var(--bleu); }
-.main { padding: 32px; max-width: 1200px; margin: 0 auto; }
+.main { padding: 24px 32px; max-width: 1600px; margin: 0 auto; }
 .card { background: var(--blanc); border-radius: var(--radius); box-shadow: var(--shadow); margin-bottom: 20px; overflow: hidden; }
 .card-header { padding: 18px 24px; border-bottom: 1px solid #e8f0f8; display: flex; align-items: center; justify-content: space-between; }
 .card-title { font-size: 15px; font-weight: 600; color: var(--texte); }
@@ -594,7 +594,7 @@ function renderCollabsFiltered(collabs) {
       <td>${c.structure||'—'}</td>
       <td>${c.typeContrat||'—'}${c.typePeriode ? ' · <span style="font-size:13px;color:var(--texte2)">' + (c.typePeriode==='decalee'?'déc.':'civ.') + '</span>' : ''}</td>
       <td>${c.heuresHebdo ? c.heuresHebdo+'h' : '—'}</td>
-      <td><span class="badge ${badgeClass}">${badgeLabel}</span></td>
+      <td style="white-space:nowrap"><span class="badge ${badgeClass}">${badgeLabel}</span></td>
       <td style="font-size:13px;color:var(--texte2)">${nomEquipe(c.equipeId)}</td>
       <td style="font-size:13px;color:var(--texte2)">${fmtDate(c.dateActivation)}</td>
       <td style="font-size:13px;color:var(--texte2)">${c.matriculeSilae||'—'}</td>
