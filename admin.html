@@ -750,21 +750,27 @@ async function sauverCollab() {
     equipeId: document.getElementById('f-equipe').value,
     token: ADMIN_TOKEN,
   };
+  // Validation type_periode obligatoire
+  if (!params.typePeriode) {
+    errBox.textContent = 'Aucune période de paie définie pour ce collaborateur — veuillez sélectionner un type de période.';
+    errBox.style.display = 'block';
+    btn.disabled = false; btn.textContent = 'Enregistrer';
+    return;
+  }
   try {
     const url = API_URL + '?' + Object.entries(params).map(([k,v]) => k+'='+encodeURIComponent(v)).join('&');
+    fermerModal();
+    chargerCollabs();
     const d = await jsonpFetch(url);
     if (!d.ok) {
-      errBox.textContent = d.error||'Erreur.';
-      errBox.style.display = 'block';
-      btn.disabled = false; btn.textContent = 'Enregistrer';
+      alert('⚠️ Erreur : ' + (d.error||'inconnue'));
       return;
     }
     if (d.action === 'created' && d.lien) {
       navigator.clipboard.writeText(d.lien).catch(()=>{});
       alert('✓ Collaborateur créé !\n\nLien copié :\n' + d.lien);
+      chargerCollabs();
     }
-    fermerModal();
-    chargerCollabs();
   } catch(e) {
     errBox.textContent = 'Erreur réseau.';
     errBox.style.display = 'block';
@@ -1272,6 +1278,13 @@ async function sauverJour(idx, jourId, collabId) {
     commentaire:     get(`j${idx}-comm`),
     remarqueManager: get(`j${idx}-rem`),
   };
+  // Validation type_periode obligatoire
+  if (!params.typePeriode) {
+    errBox.textContent = 'Aucune période de paie définie pour ce collaborateur — veuillez sélectionner un type de période.';
+    errBox.style.display = 'block';
+    btn.disabled = false; btn.textContent = 'Enregistrer';
+    return;
+  }
   try {
     const url = API_URL + '?' + Object.entries(params).map(([k,v]) => k+'='+encodeURIComponent(v)).join('&');
     const d = await jsonpFetch(url);
