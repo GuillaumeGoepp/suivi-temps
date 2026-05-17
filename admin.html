@@ -594,7 +594,7 @@ function renderCollabsFiltered(collabs) {
       <td>${c.structure||'—'}</td>
       <td>${c.typeContrat||'—'}${c.typePeriode ? ' · <span style="font-size:13px;color:var(--texte2)">' + (c.typePeriode==='decalee'?'déc.':'civ.') + '</span>' : ''}</td>
       <td>${c.heuresHebdo ? c.heuresHebdo+'h' : '—'}</td>
-      <td style="white-space:nowrap"><span class="badge ${badgeClass}">${badgeLabel}</span>${c.statut==='en_attente'&&!c.dateActivation?' <span title="Date d'activation manquante" style="color:#c8621a;font-size:13px;">⚠️</span>':''}</td>
+      <td style="white-space:nowrap"><span class="badge ${badgeClass}">${badgeLabel}</span>${c.statut==='en_attente'&&!c.dateActivation?' <span title="Date activation manquante" style="color:#c8621a;font-size:13px;">⚠️</span>':''}</td>
       <td style="font-size:13px;color:var(--texte2)">${nomEquipe(c.equipeId)}</td>
       <td style="font-size:13px;color:var(--texte2)">${fmtDate(c.dateActivation)}</td>
       <td style="font-size:13px;color:var(--texte2)">${c.matriculeSilae||'—'}</td>
