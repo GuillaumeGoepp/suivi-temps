@@ -202,8 +202,8 @@ th.sort-desc::after { content: ' ↓'; opacity: 1; color: var(--bleu); }
                 <th>Contrat / Période</th>
                 <th>H/sem</th>
                 <th class="sortable" onclick="trierCollabs('statut',this)">Statut</th>
-                <th>Équipe</th>
                 <th>Activation</th>
+                <th>Équipe</th>
                 <th>Matricule Silae</th>
                 <th>Lien</th>
                 <th>Actions</th>
@@ -595,8 +595,8 @@ function renderCollabsFiltered(collabs) {
       <td>${c.typeContrat||'—'}${c.typePeriode ? ' · <span style="font-size:13px;color:var(--texte2)">' + (c.typePeriode==='decalee'?'déc.':'civ.') + '</span>' : ''}</td>
       <td>${c.heuresHebdo ? c.heuresHebdo+'h' : '—'}</td>
       <td style="white-space:nowrap"><span class="badge ${badgeClass}">${badgeLabel}</span>${c.statut==='en_attente'&&!c.dateActivation?' <span title="Date activation manquante" style="color:#c8621a;font-size:13px;">⚠️</span>':''}</td>
-      <td style="font-size:13px;color:var(--texte2)">${nomEquipe(c.equipeId)}</td>
       <td style="font-size:13px;color:var(--texte2)">${fmtDate(c.dateActivation)}</td>
+      <td style="font-size:13px;color:var(--texte2)">${nomEquipe(c.equipeId)}</td>
       <td style="font-size:13px;color:var(--texte2)">${c.matriculeSilae||'—'}</td>
       <td>${c.lien ? `<button class="token-link" onclick="copierLien('${c.lien}')" title="${c.lien}">📋 ${c.token}</button>` : '—'}</td>
       <td style="display:flex;gap:6px;flex-wrap:wrap">
