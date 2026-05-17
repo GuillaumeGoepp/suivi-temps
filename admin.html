@@ -601,10 +601,39 @@ function renderCollabsFiltered(collabs) {
       <td>${c.lien ? `<button class="token-link" onclick="copierLien('${c.lien}')" title="${c.lien}">📋 ${c.token}</button>` : '—'}</td>
       <td style="display:flex;gap:6px;flex-wrap:wrap">
         <button class="btn btn-secondary btn-sm" onclick="ouvrirModalCollabData('${collabJson}')">✏️</button>
+        <button class="btn btn-secondary btn-sm" onclick="copierMessage('${collabJson}')" title="Copier le message d'invitation">📨</button>
         <button class="btn ${toggleClass} btn-sm" onclick="toggleCollab('${c.collabId}', this)">${toggleLabel}</button>
       </td>
     </tr>`;
   }).join('');
+}
+
+function copierMessage(encoded) {
+  const c = JSON.parse(decodeURIComponent(encoded));
+  const prenom = (c.prenom || c.nomAffiche.split(' ')[0] || '');
+  const lien = c.lien || '';
+  const token = c.token || '';
+  const msg = `Bonjour ${prenom},
+
+Voici ton accès à l'appli de suivi des heures Chants de la Terre.
+
+👉 Clique sur ce lien : ${lien}
+
+À la première ouverture, entre ton code d'accès : ${token}
+
+Ensuite installe l'appli sur ton téléphone :
+- iPhone : bouton Partager → "Sur l'écran d'accueil" → "Ouvrir comme app web"
+- Android : bouton "Installer l'application" qui apparaît automatiquement
+
+En cas de problème, contacte ton responsable.
+
+Chants de la Terre`;
+  navigator.clipboard.writeText(msg).then(() => {
+    const t = document.getElementById('toast');
+    t.textContent = '✓ Message copié !';
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 2500);
+  });
 }
 
 function copierLien(lien) {
