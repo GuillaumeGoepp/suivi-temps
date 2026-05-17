@@ -737,9 +737,9 @@ async function sauverCollab() {
   const params = {
     action: 'bo_saveCollab',
     collabId: collabEnEdition?.collabId || '',
-    prenom: document.getElementById('f-prenom').value.trim(),
-    nom: document.getElementById('f-nom').value.trim(),
-    email: document.getElementById('f-email').value.trim(),
+    prenom: (v => v.charAt(0).toUpperCase() + v.slice(1).toLowerCase())(document.getElementById('f-prenom').value.trim()),
+    nom: document.getElementById('f-nom').value.trim().toUpperCase(),
+    email: document.getElementById('f-email').value.trim().toLowerCase(),
     structure: document.getElementById('f-structure').value,
     typeContrat: document.getElementById('f-contrat').value,
     heuresHebdo: document.getElementById('f-heures').value,
