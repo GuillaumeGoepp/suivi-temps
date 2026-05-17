@@ -198,7 +198,7 @@ th.sort-desc::after { content: ' ↓'; opacity: 1; color: var(--bleu); }
             <thead>
               <tr>
                 <th class="sortable sort-asc" onclick="trierCollabs('nom',this)">Nom</th>
-                <th class="sortable" onclick="trierCollabs('structure',this)">Structure</th>
+                <th class="sortable" onclick="trierCollabs('structure',this)" style="white-space:nowrap">Struct.</th>
                 <th>Contrat / Période</th>
                 <th>H/sem</th>
                 <th class="sortable" onclick="trierCollabs('statut',this)">Statut</th>
@@ -592,7 +592,7 @@ function renderCollabsFiltered(collabs) {
     return `<tr>
       <td><strong>${c.nomAffiche || ((c.prenom||'') + ' ' + (c.nom||'')).trim()}</strong></td>
       <td>${c.structure||'—'}</td>
-      <td>${c.typeContrat||'—'}${c.typePeriode ? ' · <span style="font-size:11px;color:var(--texte3)">' + (c.typePeriode==='decalee'?'déc.':'civ.') + '</span>' : ''}</td>
+      <td>${c.typeContrat||'—'}${c.typePeriode ? ' · <span style="font-size:13px;color:var(--texte2)">' + (c.typePeriode==='decalee'?'déc.':'civ.') + '</span>' : ''}</td>
       <td>${c.heuresHebdo ? c.heuresHebdo+'h' : '—'}</td>
       <td><span class="badge ${badgeClass}">${badgeLabel}</span></td>
       <td style="font-size:13px;color:var(--texte2)">${nomEquipe(c.equipeId)}</td>
