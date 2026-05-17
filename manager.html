@@ -248,15 +248,6 @@ async function charger30j() {
     document.getElementById('recap-tbody').innerHTML = '<tr><td colspan="5" style="color:var(--rouge);padding:24px">Erreur réseau.</td></tr>';
   }
 }
-    : sorted.map(c => `
-      <tr>
-        <td><strong>${c.nomAffiche}</strong></td>
-        <td>${c.heuresHebdo ? c.heuresHebdo + 'h' : '—'}</td>
-        <td style="font-size:13px;color:var(--texte2)">${fmtDate(c.derniereSaisie) || '—'}</td>
-        <td><span style="font-family:monospace;font-weight:500">${c.totalHeures.toFixed(2)}h</span></td>
-        <td><button class="btn btn-warning btn-sm" onclick="ouvrirSaisies('${c.collabId}', this)">📋 Voir</button></td>
-      </tr>`).join('');
-}
 
 function fermerSaisies() {
   document.getElementById('modal-saisies').classList.remove('open');
