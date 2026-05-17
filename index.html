@@ -9,6 +9,8 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="theme-color" content="#1a3a1a">
+    <link rel="manifest" href="/suivi-temps/manifest.json">
+    <link rel="apple-touch-icon" href="/suivi-temps/icon-192.png">
     <title>Suivi du temps</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=DM+Mono:wght@500&display=swap" rel="stylesheet">
@@ -1192,5 +1194,26 @@
     initHeader();
     loadJourDuJour();
     </script>
+<script>
+  // PWA — enregistrement service worker
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/suivi-temps/service-worker.js')
+      .then(() => console.log('SW enregistré'))
+      .catch(e => console.warn('SW erreur', e));
+  }
+
+  // Mémorisation du token dans localStorage
+  const urlToken = new URLSearchParams(location.search).get('id');
+  if (urlToken) {
+    localStorage.setItem('cdt_token', urlToken);
+  } else {
+    const saved = localStorage.getItem('cdt_token');
+    if (saved && !location.search.includes('id=')) {
+      const url = new URL(location.href);
+      url.searchParams.set('id', saved);
+      history.replaceState(null, '', url.toString());
+    }
+  }
+</script>
 </body>
 </html>
