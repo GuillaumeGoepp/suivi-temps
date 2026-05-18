@@ -689,7 +689,7 @@ async function chargerVueEquipes() {
     document.getElementById('equipes-tbody').innerHTML = equipes.length === 0
       ? '<tr><td colspan="5" style="text-align:center;color:var(--texte3);padding:32px">Aucune équipe.</td></tr>'
       : equipes.map(e => {
-          const membres = collabs.filter(c => c.equipeId === e.equipeId && c.statut === 'actif');
+          const membres = collabs.filter(c => c.equipeId === e.equipeId && c.statut !== 'inactif');
           const lienManager = e.managerToken ? 'https://chantsdelaterre.github.io/suivi-temps/manager.html?token=' + e.managerToken : '';
           const btnLien = lienManager ? '<button class="token-link" onclick="copierLienManager(this)" data-lien="' + lienManager + '">📋 Copier lien</button>' : '—';
           const btnVoir = '<button class="btn btn-warning btn-sm" onclick="voirCollabsEquipe(this)" data-equipe-id="' + e.equipeId + '" data-equipe-nom="' + (e.nomEquipe||'') + '">👁 Voir</button>';
