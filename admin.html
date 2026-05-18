@@ -169,6 +169,7 @@ th.sort-desc::after { content: ' ↓'; opacity: 1; color: var(--bleu); }
     <div class="tab" onclick="showTab('periodes', this)">📅 Périodes</div>
     <div class="tab" onclick="showTab('recap', this)">📊 Récap</div>
     <div class="tab" onclick="showTab('paie', this)">💶 Paie</div>
+    <div class="tab" onclick="showTab('equipes', this)">🌿 Équipes</div>
   </div>
   <div class="main">
     <div class="vue active" id="vue-collabs">
@@ -408,6 +409,44 @@ th.sort-desc::after { content: ' ↓'; opacity: 1; color: var(--bleu); }
     </div>
   </div>
 </div>
+    <div class="vue" id="vue-equipes">
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">Équipes</span>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Équipe</th>
+                <th>Manager</th>
+                <th>Collabs</th>
+                <th>Lien manager</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="equipes-tbody">
+              <tr><td colspan="5"><div class="loader"><div class="spinner"></div>Chargement…</div></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div id="equipe-detail" style="display:none;margin-top:20px">
+        <div class="card">
+          <div class="card-header">
+            <button class="btn btn-secondary btn-sm" onclick="fermerEquipeDetail()">← Retour</button>
+            <span class="card-title" id="equipe-detail-titre">Collaborateurs</span>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Nom</th><th>Contrat</th><th>H/sem</th><th>Statut</th></tr></thead>
+              <tbody id="equipe-collabs-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div><!-- /vue-equipes -->
+
 <div class="copy-toast" id="toast">✓ Lien copié !</div>
 <script>
 const API_URL = 'https://script.google.com/macros/s/AKfycbx1BTyA9scZnOy7cFKoif9KuV_PuEmotXtO5yCheB-IUESExdG5v5l3maZ-Wn-XBowwbg/exec';
@@ -501,6 +540,7 @@ function showTab(nom, el) {
   el.classList.add('active');
   if (nom === 'recap') chargerRecap();
   if (nom === 'paie') chargerPeriodes();
+  if (nom === 'equipes') chargerEquipes();
 }
 
 async function chargerEquipes() {
@@ -634,6 +674,54 @@ Chants de la Terre`;
     t.classList.add('show');
     setTimeout(() => t.classList.remove('show'), 2500);
   });
+}
+
+async function chargerEquipes() {
+  document.getElementById('equipes-tbody').innerHTML = '<tr><td colspan="5"><div class="loader"><div class="spinner"></div>Chargement…</div></td></tr>';
+  try {
+    const [de, dc] = await Promise.all([
+      jsonpFetch(API_URL + '?action=bo_getEquipes&token=' + encodeURIComponent(ADMIN_TOKEN)),
+      jsonpFetch(API_URL + '?action=bo_getCollabs&token=' + encodeURIComponent(ADMIN_TOKEN))
+    ]);
+    if (!de.ok) return;
+    const equipes = de.equipes || [];
+    const collabs = dc.ok ? (dc.collabs || []) : [];
+    document.getElementById('equipes-tbody').innerHTML = equipes.length === 0
+      ? '<tr><td colspan="5" style="text-align:center;color:var(--texte3);padding:32px">Aucune équipe.</td></tr>'
+      : equipes.map(e => {
+          const membres = collabs.filter(c => c.equipeId === e.equipeId && c.statut === 'actif');
+          const lienManager = e.managerToken ? 'https://chantsdelaterre.github.io/suivi-temps/manager.html?token=' + e.managerToken : '';
+          return '<tr>' +
+            '<td><strong>' + (e.nomEquipe||'—') + '</strong></td>' +
+            '<td>' + (e.nomManager||'—') + '</td>' +
+            '<td><span style="font-weight:600">' + membres.length + '</span></td>' +
+            '<td>' + (lienManager ? '<button class="token-link" onclick="navigator.clipboard.writeText('' + lienManager + '').then(()=>{const t=document.getElementById('toast');t.textContent='✓ Lien copié !';t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2000)})">📋 Copier lien</button>' : '—') + '</td>' +
+            '<td><button class="btn btn-warning btn-sm" onclick="voirCollabsEquipe('' + e.equipeId + '','' + (e.nomEquipe||'') + '')">👁 Voir</button></td>' +
+            '</tr>';
+        }).join('');
+    window._equipes_collabs = collabs;
+  } catch(e) {
+    document.getElementById('equipes-tbody').innerHTML = '<tr><td colspan="5" style="color:var(--rouge);padding:24px">Erreur réseau.</td></tr>';
+  }
+}
+
+function voirCollabsEquipe(equipeId, nomEquipe) {
+  document.getElementById('equipe-detail').style.display = 'block';
+  document.getElementById('equipe-detail-titre').textContent = 'Équipe ' + nomEquipe;
+  const collabs = (window._equipes_collabs || []).filter(c => c.equipeId === equipeId);
+  document.getElementById('equipe-collabs-tbody').innerHTML = collabs.length === 0
+    ? '<tr><td colspan="4" style="text-align:center;color:var(--texte3);padding:24px">Aucun collab dans cette équipe.</td></tr>'
+    : collabs.map(c => '<tr>' +
+        '<td><strong>' + c.nomAffiche + '</strong></td>' +
+        '<td>' + (c.typeContrat||'—') + '</td>' +
+        '<td>' + (c.heuresHebdo ? c.heuresHebdo + 'h' : '—') + '</td>' +
+        '<td><span class="badge ' + (c.statut==='actif'?'badge-actif':c.statut==='inactif'?'badge-inactif':'badge-attente') + '">' + (c.statut==='actif'?'Actif':c.statut==='inactif'?'Inactif':'En attente') + '</span></td>' +
+        '</tr>').join('');
+  document.getElementById('equipe-detail').scrollIntoView({behavior:'smooth'});
+}
+
+function fermerEquipeDetail() {
+  document.getElementById('equipe-detail').style.display = 'none';
 }
 
 function copierLien(lien) {
