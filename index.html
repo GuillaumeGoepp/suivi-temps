@@ -660,7 +660,7 @@
     <div class="header">
         <div class="header-company" id="hdr-company">Chants de la Terre</div>
         <div class="header-name" id="hdr-name">…</div>
-        <a id="btn-mon-equipe" href="#" style="display:none;margin-top:10px;align-items:center;gap:6px;background:rgba(255,255,255,.15);border-radius:20px;padding:5px 12px;font-size:13px;color:white;text-decoration:none;">👥 Mon équipe</a>
+        <a id="btn-mon-equipe" href="#" onclick="this.textContent='⏳ Chargement...';this.style.opacity='.6';setTimeout(()=>location.href=this.dataset.href,300);return false;" style="display:none;margin-top:10px;align-items:center;gap:6px;background:rgba(255,255,255,.15);border-radius:20px;padding:5px 12px;font-size:13px;color:white;text-decoration:none;">👥 Mon équipe</a>
         <div class="header-date" id="hdr-date">…</div>
         <div class="header-badge" id="hdr-periode">…</div>
     </div>
@@ -823,7 +823,7 @@
             COLLAB_EQUIPE_ID = (d.collab && d.collab.equipeId) || '';
             if (COLLAB_ROLE === 'responsable' && COLLAB_EQUIPE_ID) {
               const btnEquipe = document.getElementById('btn-mon-equipe');
-              if (btnEquipe) { btnEquipe.style.display = 'flex'; btnEquipe.href = 'https://chantsdelaterre.github.io/suivi-temps/manager.html?token=' + COLLAB_EQUIPE_ID; }
+              if (btnEquipe) { btnEquipe.style.display = 'flex'; btnEquipe.dataset.href = 'https://chantsdelaterre.github.io/suivi-temps/manager.html?token=' + COLLAB_EQUIPE_ID; }
             }
             document.getElementById('hdr-periode').textContent = d.jour && d.jour.periodeId ? 'Période en cours' : 'Période en cours';
             renderJournee();
