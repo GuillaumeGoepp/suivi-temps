@@ -540,7 +540,7 @@ function showTab(nom, el) {
   el.classList.add('active');
   if (nom === 'recap') chargerRecap();
   if (nom === 'paie') chargerPeriodes();
-  if (nom === 'equipes') chargerEquipes();
+  if (nom === 'equipes') chargerVueEquipes();
 }
 
 async function chargerEquipes() {
@@ -676,7 +676,7 @@ Chants de la Terre`;
   });
 }
 
-async function chargerEquipes() {
+async function chargerVueEquipes() {
   document.getElementById('equipes-tbody').innerHTML = '<tr><td colspan="5"><div class="loader"><div class="spinner"></div>Chargement…</div></td></tr>';
   try {
     const [de, dc] = await Promise.all([
