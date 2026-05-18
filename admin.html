@@ -691,21 +691,29 @@ async function chargerEquipes() {
       : equipes.map(e => {
           const membres = collabs.filter(c => c.equipeId === e.equipeId && c.statut === 'actif');
           const lienManager = e.managerToken ? 'https://chantsdelaterre.github.io/suivi-temps/manager.html?token=' + e.managerToken : '';
-          return '<tr>' +
-            '<td><strong>' + (e.nomEquipe||'—') + '</strong></td>' +
-            '<td>' + (e.nomManager||'—') + '</td>' +
-            '<td><span style="font-weight:600">' + membres.length + '</span></td>' +
-            '<td>' + (lienManager ? '<button class="token-link" onclick="navigator.clipboard.writeText('' + lienManager + '').then(()=>{const t=document.getElementById('toast');t.textContent='✓ Lien copié !';t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2000)})">📋 Copier lien</button>' : '—') + '</td>' +
-            '<td><button class="btn btn-warning btn-sm" onclick="voirCollabsEquipe('' + e.equipeId + '','' + (e.nomEquipe||'') + '')">👁 Voir</button></td>' +
-            '</tr>';
+          const btnLien = lienManager ? '<button class="token-link" onclick="copierLienManager(this)" data-lien="' + lienManager + '">📋 Copier lien</button>' : '—';
+          const btnVoir = '<button class="btn btn-warning btn-sm" onclick="voirCollabsEquipe(this)" data-equipe-id="' + e.equipeId + '" data-equipe-nom="' + (e.nomEquipe||'') + '">👁 Voir</button>';
+          return '<tr><td><strong>' + (e.nomEquipe||'—') + '</strong></td><td>' + (e.nomManager||'—') + '</td><td><span style="font-weight:600">' + membres.length + '</span></td><td>' + btnLien + '</td><td>' + btnVoir + '</td></tr>';
         }).join('');
-    window._equipes_collabs = collabs;
+    window._equipes_collabs = collabs;window._equipes_collabs = collabs;
   } catch(e) {
     document.getElementById('equipes-tbody').innerHTML = '<tr><td colspan="5" style="color:var(--rouge);padding:24px">Erreur réseau.</td></tr>';
   }
 }
 
-function voirCollabsEquipe(equipeId, nomEquipe) {
+function copierLienManager(btn) {
+  const lien = btn.dataset.lien;
+  navigator.clipboard.writeText(lien).then(() => {
+    const t = document.getElementById('toast');
+    t.textContent = '✓ Lien copié !';
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 2000);
+  });
+}
+
+function voirCollabsEquipe(btn) {
+  const equipeId = btn.dataset.equipeId;
+  const nomEquipe = btn.dataset.equipeNom;
   document.getElementById('equipe-detail').style.display = 'block';
   document.getElementById('equipe-detail-titre').textContent = 'Équipe ' + nomEquipe;
   const collabs = (window._equipes_collabs || []).filter(c => c.equipeId === equipeId);
