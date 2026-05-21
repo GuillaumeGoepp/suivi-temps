@@ -246,7 +246,7 @@ th.sort-desc::after { content: ' ↓'; opacity: 1; color: var(--bleu); }
         <div class="filter-bar"><div class="filter-group"><button class="filter-btn active" onclick="setFiltreRecap('',this)">Toutes</button><button class="filter-btn" onclick="setFiltreRecap('SCEA',this)">SCEA</button><button class="filter-btn" onclick="setFiltreRecap('SAS',this)">SAS</button><button class="filter-btn" onclick="setFiltreRecap('SARL',this)">SARL</button></div><span class="filter-count" id="recap-filter-count"></span></div>
         <div class="table-wrap">
           <table>
-            <thead><tr><th>Collaborateur</th><th>Structure</th><th>Contrat</th><th>H/sem</th><th>Heures saisies</th><th>Jours saisis</th><th>Jours manquants</th><th>Dernière saisie</th><th>Saisies</th></tr></thead>
+            <thead><tr><th>Collaborateur</th><th>Structure</th><th>Contrat</th><th>H/sem</th><th>Heures saisies</th><th>Jours saisis</th><th>Dernière saisie</th><th>Saisies</th></tr></thead>
             <tbody id="recap-tbody"><tr><td colspan="9"><div class="loader"><div class="spinner"></div></div></td></tr></tbody>
           </table>
         </div>
@@ -1598,10 +1598,7 @@ function renderRecapFiltered() {
       <div class="stat-card"><div class="stat-num">${totalH.toFixed(1)}h</div><div class="stat-lbl">Heures totales</div></div>
       <div class="stat-card"><div class="stat-num">${result.length}</div><div class="stat-lbl">Collaborateurs actifs</div></div>
       <div class="stat-card"><div class="stat-num">${nbSaisis}</div><div class="stat-lbl">Jours saisis</div></div>
-      <div class="stat-card" style="${nbManquants>0?'background:var(--orange-pale)':''}">
-        <div class="stat-num" style="${nbManquants>0?'color:var(--orange)':''}">${nbManquants}</div>
-        <div class="stat-lbl">Jours manquants</div>
-      </div></div>`;
+</div>`;
   }
   const sorted = [...result].sort((a, b) => {
     if (a.alerte && !b.alerte) return -1;
@@ -1618,7 +1615,7 @@ function renderRecapFiltered() {
         <td>${c.heuresHebdo ? c.heuresHebdo + 'h' : '—'}</td>
         <td><span style="font-family:monospace;font-weight:500">${c.totalHeures.toFixed(2)}h</span></td>
         <td>${c.nbSaisis}</td>
-        <td>${c.nbNonSaisis > 0 ? '<span class="alerte-badge">⚠️ ' + c.nbNonSaisis + '</span>' : '<span style="color:var(--vert)">✓ 0</span>'}</td>
+
         <td style="font-size:13px;color:var(--texte2)">${fmtDate(c.derniereSaisie) || '—'}</td>
         <td><button class="btn btn-warning btn-sm" onclick="ouvrirSaisies('${c.collabId}', this)">📋 Voir</button></td>
       </tr>
@@ -1643,10 +1640,7 @@ async function chargerRecap(periodeId) {
         <div class="stat-card"><div class="stat-num">${totalH.toFixed(1)}h</div><div class="stat-lbl">Heures totales</div></div>
         <div class="stat-card"><div class="stat-num">${d.recap.length}</div><div class="stat-lbl">Collaborateurs actifs</div></div>
         <div class="stat-card"><div class="stat-num">${nbSaisis}</div><div class="stat-lbl">Jours saisis</div></div>
-        <div class="stat-card" style="${nbManquants>0?'background:var(--orange-pale)':''}">
-          <div class="stat-num" style="${nbManquants>0?'color:var(--orange)':''}">${nbManquants}</div>
-          <div class="stat-lbl">Jours manquants</div>
-        </div>
+
       </div>`;
     recapData = d.recap;
     filtreRecapStructure = '';
