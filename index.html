@@ -28,6 +28,16 @@
         --rouge: #c0392b;
         --radius: 16px;
     }
+    body.theme-pourpre {
+        --vert: #4a1628;
+        --vert-clair: #6b2040;
+        --vert-pale: #fbeaf0;
+        --fond: #fdf5f8;
+        --texte: #2a0e18;
+        --texte2: #7a3050;
+        --texte3: #b07090;
+        --vide: #e8c0d0;
+    }
 
     * {
         box-sizing: border-box;
@@ -663,6 +673,12 @@
         <a id="btn-mon-equipe" href="#" onclick="this.textContent='⏳ Chargement...';this.style.opacity='.6';setTimeout(()=>location.href=this.dataset.href,300);return false;" style="display:none;margin-top:10px;align-items:center;gap:6px;background:rgba(255,255,255,.15);border-radius:20px;padding:5px 12px;font-size:13px;color:white;text-decoration:none;">👥 Mon équipe</a>
         <div class="header-date" id="hdr-date">…</div>
         <div class="header-badge" id="hdr-periode">…</div>
+        <button onclick="toggleThemePicker()" style="position:absolute;top:12px;right:12px;background:rgba(255,255,255,.15);border:none;border-radius:50%;width:32px;height:32px;font-size:16px;cursor:pointer;color:white;display:flex;align-items:center;justify-content:center;" aria-label="Changer de thème">🎨</button>
+        <div id="theme-picker" style="display:none;position:absolute;top:50px;right:12px;background:white;border-radius:12px;padding:10px 14px;box-shadow:0 4px 20px rgba(0,0,0,.2);display:none;align-items:center;gap:10px;z-index:100;">
+          <span style="font-size:12px;color:#555;">Thème :</span>
+          <button onclick="setTheme('vert')" style="width:24px;height:24px;border-radius:50%;background:#2d5a2d;border:2px solid transparent;cursor:pointer;" id="btn-theme-vert" aria-label="Thème vert"></button>
+          <button onclick="setTheme('pourpre')" style="width:24px;height:24px;border-radius:50%;background:#4a1628;border:2px solid transparent;cursor:pointer;" id="btn-theme-pourpre" aria-label="Thème pourpre"></button>
+        </div>
     </div>
     <div class="main">
         <div class="vue active" id="vue-journee">
@@ -760,6 +776,19 @@
     const COLLAB_ID = _urlToken || getCookie('cdt_token') || localStorage.getItem('cdt_token') || '';
     let COLLAB_ROLE = '';
     let COLLAB_EQUIPE_ID = '';
+    function setTheme(t) {
+      document.body.className = t === 'pourpre' ? 'theme-pourpre' : '';
+      setCookie('cdt_theme', t);
+      document.getElementById('btn-theme-vert').style.borderColor = t === 'vert' ? '#888' : 'transparent';
+      document.getElementById('btn-theme-pourpre').style.borderColor = t === 'pourpre' ? '#888' : 'transparent';
+      document.getElementById('theme-picker').style.display = 'none';
+    }
+    function toggleThemePicker() {
+      const p = document.getElementById('theme-picker');
+      p.style.display = p.style.display === 'flex' ? 'none' : 'flex';
+    }
+    const _savedTheme = getCookie('cdt_theme') || 'vert';
+    setTheme(_savedTheme);
     const API_URL = 'https://script.google.com/macros/s/AKfycbx1BTyA9scZnOy7cFKoif9KuV_PuEmotXtO5yCheB-IUESExdG5v5l3maZ-Wn-XBowwbg/exec';
     function jsonpFetch(url) {
         return new Promise((resolve, reject) => {
